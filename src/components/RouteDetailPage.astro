@@ -9,10 +9,12 @@ import Segments from './Segments.astro';
 import Warnings from './Warnings.astro';
 import Recommendations from './Recommendations.astro';
 import Gallery from './Gallery.astro';
+import InstagramEmbed from './InstagramEmbed.astro';
 import GpxCta from './GpxCta.astro';
 import RouteNav from './RouteNav.astro';
 import { loadGpx, buildElevationProfile } from '../lib/gpx';
 import { buildRouteJsonLd } from '../lib/seo';
+import { DEFAULT_COVER_IMAGE } from '../lib/media';
 import { t, routePath, type Locale } from '../lib/i18n';
 
 interface Props {
@@ -33,7 +35,7 @@ const profile = buildElevationProfile(gpx.points);
 const altEntries = await getCollection('rutas', (e: any) => e.id === `${otherLocale}/${entry.id.replace(/^[a-z]{2}\//, '')}`);
 const hasAlternate = altEntries.length > 0;
 
-const heroImage = d.gallery[0];
+const heroImage = d.gallery[0] ?? DEFAULT_COVER_IMAGE;
 const site = Astro.site ?? new URL('https://tu-dominio.example');
 
 const jsonLd = buildRouteJsonLd({
@@ -70,6 +72,8 @@ const jsonLd = buildRouteJsonLd({
     heroImage={heroImage}
   />
 
+  <GpxCta locale={locale} gpx_url={d.gpx_url} strava_url={d.strava_url} tight />
+
   <StatsBlock
     locale={locale}
     distancia_km={gpx.distanceKm}
@@ -99,6 +103,11 @@ const jsonLd = buildRouteJsonLd({
     maxEleM={profile.maxEleM}
     width={profile.width}
     height={profile.height}
+    chartLeft={profile.chartLeft}
+    chartRight={profile.chartRight}
+    chartBottom={profile.chartBottom}
+    xTicks={profile.xTicks}
+    yTicks={profile.yTicks}
     nota={d.perfil_elevacion?.nota}
   />
 
@@ -123,7 +132,7 @@ const jsonLd = buildRouteJsonLd({
     agua_comida={d.agua_comida}
   />
   <Gallery locale={locale} gallery={d.gallery} />
-  <GpxCta locale={locale} gpx_url={d.gpx_url} strava_url={d.strava_url} />
+  {d.instagram_url && <InstagramEmbed locale={locale} url={d.instagram_url} />}
   <RouteNav locale={locale} prev={prev?.data} next={next?.data} />
 </BaseLayout>
 

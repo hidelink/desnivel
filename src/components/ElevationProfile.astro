@@ -1,6 +1,11 @@
 ---
 import { t, type Locale } from '../lib/i18n';
 
+interface Tick {
+  pos: number;
+  label: string;
+}
+
 interface Props {
   locale: Locale;
   linePath: string;
@@ -9,15 +14,33 @@ interface Props {
   maxEleM: number;
   width: number;
   height: number;
+  chartLeft: number;
+  chartRight: number;
+  chartBottom: number;
+  xTicks: Tick[];
+  yTicks: Tick[];
   nota?: string;
 }
 
-const { locale, linePath, areaPath, minEleM, maxEleM, width, height, nota } = Astro.props;
+const {
+  locale,
+  linePath,
+  areaPath,
+  width,
+  height,
+  chartLeft,
+  chartRight,
+  chartBottom,
+  xTicks,
+  yTicks,
+  nota,
+} = Astro.props;
 ---
 
 <section class="elevation-block section">
   <div class="wrap">
     <p class="eyebrow">{t(locale, 'elevation_heading')}</p>
+    {nota && <p class="nota">{nota}</p>}
     <div class="chart">
       <svg viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="none" role="img" aria-label={t(locale, 'elevation_heading')}>
         <defs>
@@ -26,53 +49,67 @@ const { locale, linePath, areaPath, minEleM, maxEleM, width, height, nota } = As
             <stop offset="100%" stop-color="var(--accent-strong)" stop-opacity="0" />
           </linearGradient>
         </defs>
+
+        {yTicks.map((tick) => (
+          <line
+            x1={chartLeft}
+            x2={chartRight}
+            y1={tick.pos}
+            y2={tick.pos}
+            stroke="var(--border)"
+            stroke-width="1"
+            stroke-dasharray="2 3"
+          />
+        ))}
+
         <path d={areaPath} fill="url(#eleFill)" />
         <path d={linePath} fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linejoin="round" />
+
+        {yTicks.map((tick) => (
+          <text x={chartLeft - 8} y={tick.pos + 3} text-anchor="end" class="axis-label">
+            {tick.label}
+          </text>
+        ))}
+        {xTicks.map((tick) => (
+          <text x={tick.pos} y={chartBottom + 18} text-anchor="middle" class="axis-label">
+            {tick.label}
+          </text>
+        ))}
       </svg>
-      <div class="labels mono">
-        <span>{maxEleM} m</span>
-        <span>{minEleM} m</span>
-      </div>
     </div>
-    {nota && <p class="nota prose">{nota}</p>}
   </div>
 </section>
 
 <style>
+  .nota {
+    margin-top: var(--sp-2);
+    max-width: 46ch;
+    font-family: var(--font-display);
+    font-size: 1.3rem;
+    font-weight: 600;
+  }
   .chart {
     position: relative;
     border: 1px solid var(--border);
     border-radius: var(--radius);
     background: var(--surface);
     padding: var(--sp-4);
+    margin-top: var(--sp-6);
   }
   svg {
     width: 100%;
-    height: 200px;
+    height: 220px;
     display: block;
+    overflow: visible;
   }
-  .labels {
-    position: absolute;
-    right: var(--sp-4);
-    top: var(--sp-4);
-    display: flex;
-    flex-direction: column;
-    gap: 130px;
-    font-size: 0.75rem;
-    color: var(--text-muted);
-    text-align: right;
-  }
-  .nota {
-    margin-top: var(--sp-4);
-    color: var(--text-muted);
-    font-size: 0.95rem;
+  .axis-label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    fill: var(--text-muted);
   }
   @media (max-width: 640px) {
     svg {
-      height: 150px;
-    }
-    .labels {
-      gap: 80px;
+      height: 170px;
     }
   }
 </style>

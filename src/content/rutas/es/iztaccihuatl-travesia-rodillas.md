@@ -51,7 +51,7 @@ gallery:
   - src: "/photos/placeholder-1.svg"
     alt: "Descenso hacia Los Portillos en el segundo día"
 perfil_elevacion:
-  nota: "Un perfil de dos días: subida sostenida el primer día, descenso técnico el segundo."
+  nota: "Todo el primer día se sube. El segundo, se baja con el Popo de frente."
 highlights:
   - "Noche en refugio de altura por arriba de los 4,500 msnm"
   - "Vistas directas al Popocatépetl desde la cresta"

@@ -12,6 +12,8 @@ interface Props {
 
 const { id, locale, track, bounds, overrideCenter } = Astro.props;
 const elId = `route-map-${id}`;
+const startLabel = t(locale, 'stat_start');
+const endLabel = t(locale, 'stat_end');
 ---
 
 <section class="map-block section">
@@ -23,6 +25,8 @@ const elId = `route-map-${id}`;
       data-track={JSON.stringify(track)}
       data-bounds={JSON.stringify(bounds)}
       data-center={JSON.stringify(overrideCenter ?? {})}
+      data-start-label={startLabel}
+      data-end-label={endLabel}
       role="img"
       aria-label={t(locale, 'map_heading')}
     >
@@ -48,6 +52,8 @@ const elId = `route-map-${id}`;
     const track = JSON.parse(el.dataset.track || '[]') as [number, number][];
     const bounds = JSON.parse(el.dataset.bounds || '{}');
     const center = JSON.parse(el.dataset.center || '{}');
+    const startLabel = el.dataset.startLabel || 'Inicio';
+    const endLabel = el.dataset.endLabel || 'Fin';
 
     el.querySelector('.map-placeholder')?.remove();
 
@@ -63,10 +69,12 @@ const elId = `route-map-${id}`;
 
       const start = track[0];
       const end = track[track.length - 1];
-      L.circleMarker(start, { radius: 6, color: '#4fc3f7', weight: 2, fillColor: '#0d0d0d', fillOpacity: 1 }).addTo(
-        map
-      );
-      L.circleMarker(end, { radius: 5, color: '#888', weight: 2, fillColor: '#0d0d0d', fillOpacity: 1 }).addTo(map);
+      L.circleMarker(start, { radius: 6, color: '#4fc3f7', weight: 2, fillColor: '#0d0d0d', fillOpacity: 1 })
+        .addTo(map)
+        .bindTooltip(startLabel, { permanent: true, direction: 'top', offset: [0, -6], className: 'route-label' });
+      L.circleMarker(end, { radius: 5, color: '#888', weight: 2, fillColor: '#0d0d0d', fillOpacity: 1 })
+        .addTo(map)
+        .bindTooltip(endLabel, { permanent: true, direction: 'top', offset: [0, -6], className: 'route-label' });
     } else if (bounds.minLat !== undefined) {
       map.fitBounds([
         [bounds.minLat, bounds.minLon],
@@ -98,6 +106,23 @@ const elId = `route-map-${id}`;
 
   document.querySelectorAll<HTMLElement>('.map').forEach((el) => observer.observe(el));
 </script>
+
+<style is:global>
+  .leaflet-tooltip.route-label {
+    background: #0b0c0c;
+    color: #f2f1ed;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 999px;
+    padding: 3px 10px;
+    font-family: 'IBM Plex Mono', ui-monospace, monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.04em;
+    box-shadow: none;
+  }
+  .leaflet-tooltip.route-label::before {
+    display: none;
+  }
+</style>
 
 <style>
   .map {

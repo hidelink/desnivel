@@ -20,47 +20,44 @@ const dateFmt = new Intl.DateTimeFormat(locale === 'es' ? 'es-MX' : 'en-US', {
 ---
 
 <header class="route-hero">
-  {heroImage && (
-    <div class="hero-image">
-      <img src={heroImage.src} alt={heroImage.alt} />
-      <div class="hero-scrim"></div>
+  <div class="wrap grid">
+    <div class="text-col">
+      <p class="eyebrow meta">
+        <span>{translateType(locale, tipo)}</span>
+        <span aria-hidden="true">·</span>
+        <span>{zona}</span>
+        <span aria-hidden="true">·</span>
+        <span>{dateFmt.format(fecha)}</span>
+      </p>
+      <h1>{titulo}</h1>
+      <p class="subtitulo">{subtitulo}</p>
+      <p class="ubicacion mono">{ubicacion}</p>
     </div>
-  )}
-  <div class="wrap">
-    <p class="eyebrow meta">
-      <span>{translateType(locale, tipo)}</span>
-      <span aria-hidden="true">·</span>
-      <span>{zona}</span>
-      <span aria-hidden="true">·</span>
-      <span>{dateFmt.format(fecha)}</span>
-    </p>
-    <h1>{titulo}</h1>
-    <p class="subtitulo">{subtitulo}</p>
-    <p class="ubicacion mono">{ubicacion}</p>
+    {heroImage && (
+      <div class="image-col">
+        <img src={heroImage.src} alt={heroImage.alt} loading="eager" />
+      </div>
+    )}
   </div>
 </header>
 
 <style>
   .route-hero {
-    position: relative;
     padding-block: var(--sp-16) var(--sp-12);
-    overflow: hidden;
   }
-  .hero-image {
-    position: absolute;
-    inset: 0;
-    z-index: -1;
+  .grid {
+    display: grid;
+    grid-template-columns: 1.1fr 1fr;
+    gap: var(--sp-12);
+    align-items: center;
   }
-  .hero-image img {
+  .image-col img {
     width: 100%;
     height: 100%;
+    aspect-ratio: 4 / 5;
     object-fit: cover;
-    opacity: 0.55;
-  }
-  .hero-scrim {
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(180deg, var(--overlay) 0%, var(--bg) 92%);
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
   }
   .meta {
     display: flex;
@@ -68,11 +65,11 @@ const dateFmt = new Intl.DateTimeFormat(locale === 'es' ? 'es-MX' : 'en-US', {
     margin-bottom: var(--sp-4);
   }
   h1 {
-    max-width: 18ch;
+    max-width: 14ch;
   }
   .subtitulo {
     margin-top: var(--sp-4);
-    max-width: 48ch;
+    max-width: 40ch;
     font-size: 1.15rem;
     color: var(--text-muted);
   }
@@ -80,6 +77,21 @@ const dateFmt = new Intl.DateTimeFormat(locale === 'es' ? 'es-MX' : 'en-US', {
     margin-top: var(--sp-6);
     color: var(--accent);
     font-size: 0.85rem;
+  }
+  @media (max-width: 900px) {
+    .grid {
+      grid-template-columns: 1fr;
+      gap: var(--sp-8);
+    }
+    .image-col {
+      order: -1;
+    }
+    .image-col img {
+      aspect-ratio: 16 / 10;
+    }
+    h1 {
+      max-width: none;
+    }
   }
   @media (max-width: 640px) {
     .route-hero {

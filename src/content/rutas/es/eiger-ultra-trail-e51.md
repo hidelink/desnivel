@@ -42,6 +42,7 @@ equipo_sugerido:
   - "Mínimo 1.5 L de agua + sistema de filtrado o pastillas potabilizadoras"
 agua_comida: "Hay puntos de abastecimiento en los pueblos de paso, pero en la cresta larga (km 12-32) no hay ningún punto de agua — planifica en consecuencia."
 gpx_url: "/gpx/eiger-ultra-trail-e51.gpx"
+instagram_url: "https://www.instagram.com/reel/DatSWBYv_QA/"
 gallery:
   - src: "/photos/cover-eiger-ultra-trail-e51.jpg"
     alt: "Los Alpes berneses al atardecer"
@@ -51,7 +52,7 @@ gallery:
   - src: "/photos/placeholder-3.svg"
     alt: "Vista del valle desde la parte alta del recorrido"
 perfil_elevacion:
-  nota: "El desnivel real se calcula directamente del GPX — más de 3,000 m acumulados en un solo día."
+  nota: "Una subida larga y constante hasta la cresta. Ocho kilómetros de bajada técnica al final."
 highlights:
   - "Vistas directas a las paredes de granito del Oberland bernés durante gran parte del recorrido"
   - "Uno de los tramos de cresta más largos y expuestos que he corrido"

@@ -51,7 +51,7 @@ gallery:
   - src: "/photos/placeholder-3.svg"
     alt: "Terreno volcánico cerca del Pico del Fraile"
 perfil_elevacion:
-  nota: "Un perfil corto pero contundente: casi 800 m de desnivel en menos de 5 km de subida."
+  nota: "Ochocientos metros de subida en menos de cinco kilómetros. Sin tregua hasta el cráter."
 highlights:
   - "Las lagunas del cráter visibles durante casi todo el ascenso"
   - "Altitud máxima de 4,620 msnm en apenas 9.5 km de recorrido total"

@@ -32,6 +32,9 @@ const { locale, section, esPath, enPath } = Astro.props;
     </nav>
 
     <div class="tools">
+      <a class="avatar" href={localePath(locale, '/acerca')} aria-label={t(locale, 'nav_about')}>
+        <img src="/avatar.svg" alt="" width="28" height="28" />
+      </a>
       <LanguageSwitch locale={locale} esPath={esPath} enPath={enPath} />
       <button id="theme-toggle" type="button" aria-label={t(locale, 'theme_toggle')}>
         <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -49,10 +52,13 @@ const { locale, section, esPath, enPath } = Astro.props;
   const btn = document.getElementById('theme-toggle');
   btn?.addEventListener('click', () => {
     const root = document.documentElement;
-    const current = root.dataset.theme === 'light' ? 'dark' : 'light';
-    root.dataset.theme = current;
-    localStorage.setItem(KEY, current);
-    document.dispatchEvent(new CustomEvent('themechange', { detail: { theme: current } }));
+    const isDarkNow =
+      root.dataset.theme === 'dark' ||
+      (!root.dataset.theme && window.matchMedia('(prefers-color-scheme: dark)').matches);
+    const next = isDarkNow ? 'light' : 'dark';
+    root.dataset.theme = next;
+    localStorage.setItem(KEY, next);
+    document.dispatchEvent(new CustomEvent('themechange', { detail: { theme: next } }));
   });
 </script>
 
@@ -104,6 +110,16 @@ const { locale, section, esPath, enPath } = Astro.props;
     display: flex;
     align-items: center;
     gap: var(--sp-4);
+  }
+  .avatar {
+    display: block;
+    line-height: 0;
+    border-radius: 50%;
+    outline-offset: 2px;
+  }
+  .avatar img {
+    border-radius: 50%;
+    display: block;
   }
   #theme-toggle {
     background: none;

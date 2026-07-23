@@ -13,7 +13,14 @@ const { locale, advertencias } = Astro.props;
   <section class="warnings-block section">
     <div class="wrap">
       <div class="panel">
-        <p class="eyebrow">{t(locale, 'warnings_heading')}</p>
+        <div class="heading">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <path d="M10 2.5 L18.5 17.5 H1.5 Z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round" />
+            <line x1="10" y1="8" x2="10" y2="12" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" />
+            <circle cx="10" cy="14.6" r="0.9" fill="currentColor" />
+          </svg>
+          <p class="eyebrow">{t(locale, 'warnings_heading')}</p>
+        </div>
         <ul class="prose">
           {advertencias.map((item) => <li>{item}</li>)}
         </ul>
@@ -24,18 +31,28 @@ const { locale, advertencias } = Astro.props;
 
 <style>
   .panel {
-    border-left: 3px solid var(--danger);
-    padding-left: var(--sp-6);
+    background: var(--danger);
+    color: #fbeae7;
+    border-radius: var(--radius);
+    padding: var(--sp-8);
+  }
+  .heading {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-3);
+    margin-bottom: var(--sp-4);
+    color: #fbeae7;
   }
   .panel .eyebrow {
-    color: var(--danger);
-    margin-bottom: var(--sp-3);
+    color: #fbeae7;
+    opacity: 0.9;
   }
-  ul {
+  .panel ul {
     margin: 0;
     padding-left: 1.1em;
     display: flex;
     flex-direction: column;
     gap: var(--sp-2);
+    color: #fdf3f1;
   }
 </style>

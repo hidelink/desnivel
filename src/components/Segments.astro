@@ -22,9 +22,9 @@ const { locale, segmentos } = Astro.props;
       <ol class="segments">
         {segmentos.map((seg, i) => (
           <li class="segment">
-            <div class="segment-index mono">{String(i + 1).padStart(2, '0')}</div>
+            <div class="segment-index mono" aria-hidden="true">{String(i + 1).padStart(2, '0')}</div>
             <div class="segment-body">
-              <p class="eyebrow">{seg.label}</p>
+              <p class="eyebrow label">{seg.label}</p>
               <h3>{seg.title}</h3>
               <p class="prose">{seg.copy}</p>
             </div>
@@ -46,7 +46,7 @@ const { locale, segmentos } = Astro.props;
   }
   .segment {
     display: grid;
-    grid-template-columns: 3rem 1fr;
+    grid-template-columns: 2.75rem 1fr;
     gap: var(--sp-6);
     border-top: 1px solid var(--border);
     padding-top: var(--sp-6);
@@ -56,16 +56,31 @@ const { locale, segmentos } = Astro.props;
     padding-top: 0;
   }
   .segment-index {
+    display: grid;
+    place-items: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    border-radius: 50%;
+    background: var(--accent);
+    color: #0b0c0c;
+    font-size: 0.9rem;
+    font-weight: 600;
+  }
+  .segment-body .label {
     color: var(--accent);
-    font-size: 1.1rem;
   }
   .segment-body h3 {
     margin: var(--sp-1) 0 var(--sp-3);
   }
   @media (max-width: 640px) {
     .segment {
-      grid-template-columns: 2rem 1fr;
+      grid-template-columns: 2.25rem 1fr;
       gap: var(--sp-4);
+    }
+    .segment-index {
+      width: 2.25rem;
+      height: 2.25rem;
+      font-size: 0.75rem;
     }
   }
 </style>

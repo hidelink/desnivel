@@ -1,0 +1,100 @@
+---
+import { t, type Locale } from '../lib/i18n';
+
+interface Props {
+  locale: Locale;
+  url: string;
+}
+
+const { locale, url } = Astro.props;
+
+const copy = {
+  es: {
+    heading: 'Hice un video de esta ruta, por si lo quieres ver.',
+    body: 'Así se ve el terreno, tal como lo corrí.',
+    cta: 'Más rutas en Instagram',
+  },
+  en: {
+    heading: 'I made a video of this route, in case you want to see it.',
+    body: 'This is what the terrain looks like, as I ran it.',
+    cta: 'More routes on Instagram',
+  },
+} as const;
+
+const c = copy[locale];
+---
+
+<section class="reel-block section">
+  <div class="wrap">
+    <div class="frame grid">
+      <div class="embed-wrap">
+        <blockquote
+          class="instagram-media"
+          data-instgrm-captioned
+          data-instgrm-permalink={url}
+          data-instgrm-version="14"
+          style="background:#FFF; border:0; border-radius:var(--radius); margin:0 auto; max-width:540px; min-width:280px; padding:0; width:100%;"
+        >
+          <a href={url} target="_blank" rel="noopener noreferrer">
+            {locale === 'es' ? 'Ver esta publicación en Instagram' : 'View this post on Instagram'}
+          </a>
+        </blockquote>
+      </div>
+      <div class="side">
+        <p class="eyebrow">{t(locale, 'reel_heading')}</p>
+        <h2>{c.heading}</h2>
+        <p class="prose">{c.body}</p>
+        <a class="ig-link" href="https://www.instagram.com/hidelink" target="_blank" rel="noopener noreferrer">
+          {c.cta} — @hidelink →
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script is:inline src="https://www.instagram.com/embed.js" async></script>
+
+<style>
+  .frame {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: var(--sp-8);
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--sp-16);
+    align-items: start;
+  }
+  .embed-wrap {
+    display: flex;
+    justify-content: center;
+  }
+  .side h2 {
+    margin: var(--sp-3) 0 var(--sp-4);
+  }
+  .side p {
+    color: var(--text-muted);
+  }
+  .ig-link {
+    display: inline-block;
+    margin-top: var(--sp-6);
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    color: var(--lime);
+    text-decoration: none;
+  }
+  .ig-link:hover {
+    text-decoration: underline;
+  }
+  @media (max-width: 768px) {
+    .frame {
+      padding: var(--sp-6) var(--sp-4);
+    }
+    .grid {
+      grid-template-columns: 1fr;
+      gap: var(--sp-8);
+    }
+  }
+</style>

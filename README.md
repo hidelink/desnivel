@@ -85,8 +85,14 @@ npm run preview    # sirve dist/ localmente para probar el build de producción
    placeholder al final de cada crónica — bórralo cuando escribas la tuya. Ver
    [HOW_TO_ADD_ROUTE.md](HOW_TO_ADD_ROUTE.md).
 3. **Fotos de galería**: son ilustraciones placeholder (`public/photos/placeholder-*.svg`).
-   Reemplázalas por tus propias fotos.
-4. **Deploy**: el sitio es 100% estático (`output: 'static'`, carpeta `dist/`) — funciona en
+   Reemplázalas por tus propias fotos. Las fotos de portada de las 3 rutas de ejemplo (las que
+   se ven en el mosaico del home) sí son fotos reales con licencia libre (Wikimedia Commons,
+   crédito en el caption de cada `gallery`) — puedes dejarlas como demo o reemplazarlas también.
+4. **Avatar del autor**: `public/avatar.svg` es un placeholder con tu inicial. Reemplázalo por tu
+   foto real (mismo nombre de archivo, o actualiza el `src` en `src/components/Header.astro`).
+5. **Instagram**: el link a `instagram.com/hidelink` en el footer y en Acerca está hardcodeado en
+   `src/components/Footer.astro` y `src/components/AboutPage.astro` — cámbialo por tu usuario.
+6. **Deploy**: el sitio es 100% estático (`output: 'static'`, carpeta `dist/`) — funciona en
    Vercel, Netlify, Cloudflare Pages o GitHub Pages sin adapter ni configuración adicional más
    allá de apuntar el build command a `npm run build` y el output a `dist/`.
 

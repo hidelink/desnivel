@@ -50,6 +50,7 @@ equipo_sugerido:
 agua_comida: "Dónde hay y dónde no hay abastecimiento."
 gpx_url: "/gpx/mi-ruta-nueva.gpx"
 strava_url: "https://strava.com/..." # opcional, bórralo si no aplica
+instagram_url: "https://www.instagram.com/reel/..." # opcional — embebe un reel/post al final de la ruta
 gallery:
   - src: "/photos/mi-ruta-nueva/1.jpg"
     alt: "Descripción de la foto"

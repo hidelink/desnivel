@@ -51,7 +51,7 @@ gallery:
   - src: "/photos/placeholder-3.svg"
     alt: "Volcanic terrain near Pico del Fraile"
 perfil_elevacion:
-  nota: "A short but heavy profile: nearly 800 m of gain in under 5 km of climbing."
+  nota: "Eight hundred meters of climbing in under five kilometers. No easing off until the crater."
 highlights:
   - "Crater lagoons visible for almost the entire ascent"
   - "Maximum altitude of 4,620 m over just 9.5 km total"

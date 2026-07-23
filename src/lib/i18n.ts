@@ -24,7 +24,7 @@ const dict = {
     map_heading: 'El recorrido',
     elevation_heading: 'Perfil de elevación',
     segments_heading: 'El recorrido por tramos',
-    warnings_heading: 'Advertencias',
+    warnings_heading: 'Ojo con esto',
     recommendations_heading: 'Recomendaciones',
     weather_heading: 'Clima ideal',
     gear_heading: 'Equipo sugerido',
@@ -42,6 +42,7 @@ const dict = {
     read_route: 'Ver ruta',
     about_title: 'Acerca de Desnivel',
     where_heading: 'Dónde están las rutas',
+    reel_heading: 'Míralo en video',
   },
   en: {
     nav_home: 'Home',
@@ -63,7 +64,7 @@ const dict = {
     map_heading: 'The route',
     elevation_heading: 'Elevation profile',
     segments_heading: 'The route, stretch by stretch',
-    warnings_heading: 'Warnings',
+    warnings_heading: 'Heads up',
     recommendations_heading: 'Recommendations',
     weather_heading: 'Ideal weather',
     gear_heading: 'Suggested gear',
@@ -81,6 +82,7 @@ const dict = {
     read_route: 'Read route',
     about_title: 'About Desnivel',
     where_heading: 'Where the routes are',
+    reel_heading: 'Watch the video',
   },
 } as const;
 

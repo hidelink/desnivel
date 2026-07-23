@@ -52,6 +52,7 @@ const rutas = defineCollection({
 
       gpx_url: z.string(),
       strava_url: z.string().url().optional(),
+      instagram_url: z.string().url().optional(),
 
       gallery: z
         .array(

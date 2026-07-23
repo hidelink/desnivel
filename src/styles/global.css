@@ -24,54 +24,62 @@
   /* layout */
   --prose-width: 42rem;
   --content-width: 76rem;
-  --radius: 3px;
+  --radius: 14px;
+  --radius-pill: 999px;
 
-  /* dark mode (default) */
-  --bg: #0b0c0c;
-  --bg-elevated: #141615;
-  --surface: #1b1d1c;
-  --border: #2a2c2a;
-  --text: #f2f1ed;
-  --text-muted: #9a9a94;
-  --accent: #e8650a;
-  --accent-strong: #ff8c3a;
-  --accent-cool: #4fc3f7;
-  --danger: #c1443a;
-  --overlay: rgba(11, 12, 12, 0.72);
-
-  color-scheme: dark;
-}
-
-:root[data-theme='light'] {
-  --bg: #f7f5f0;
-  --bg-elevated: #ffffff;
-  --surface: #efece4;
-  --border: #ddd8cc;
+  /* light mode (default) — the site's primary face: warm sand/parchment, not stark white */
+  --bg: #f5eede;
+  --bg-elevated: #faf5e9;
+  --surface: #ebe1c8;
+  --border: #d8c9a8;
   --text: #1b1b18;
-  --text-muted: #6b6b62;
+  --text-muted: #83795d;
   --accent: #c85a00;
   --accent-strong: #a5480a;
   --accent-cool: #0d84b5;
+  --lime: #5c6b1a;
+  --lime-ink: #f5eede;
   --danger: #a83226;
-  --overlay: rgba(247, 245, 240, 0.72);
+  --overlay: rgba(245, 238, 222, 0.72);
 
   color-scheme: light;
 }
 
-@media (prefers-color-scheme: light) {
-  :root:not([data-theme='dark']) {
-    --bg: #f7f5f0;
-    --bg-elevated: #ffffff;
-    --surface: #efece4;
-    --border: #ddd8cc;
-    --text: #1b1b18;
-    --text-muted: #6b6b62;
-    --accent: #c85a00;
-    --accent-strong: #a5480a;
-    --accent-cool: #0d84b5;
-    --danger: #a83226;
-    --overlay: rgba(247, 245, 240, 0.72);
-    color-scheme: light;
+/* dark mode — secondary, opt-in: desaturated forest green, not near-black */
+:root[data-theme='dark'] {
+  --bg: #10201b;
+  --bg-elevated: #182a23;
+  --surface: #1c332a;
+  --border: #2e463b;
+  --text: #f2f1ea;
+  --text-muted: #9dab9f;
+  --accent: #e8650a;
+  --accent-strong: #ff8c3a;
+  --accent-cool: #4fc3f7;
+  --lime: #c9d94a;
+  --lime-ink: #10201b;
+  --danger: #c1443a;
+  --overlay: rgba(16, 32, 27, 0.72);
+
+  color-scheme: dark;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --bg: #10201b;
+    --bg-elevated: #182a23;
+    --surface: #1c332a;
+    --border: #2e463b;
+    --text: #f2f1ea;
+    --text-muted: #9dab9f;
+    --accent: #e8650a;
+    --accent-strong: #ff8c3a;
+    --accent-cool: #4fc3f7;
+    --lime: #c9d94a;
+    --lime-ink: #10201b;
+    --danger: #c1443a;
+    --overlay: rgba(16, 32, 27, 0.72);
+    color-scheme: dark;
   }
 }
 

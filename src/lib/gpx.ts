@@ -15,6 +15,11 @@ export interface Bounds {
   maxLon: number;
 }
 
+export interface AxisTick {
+  pos: number;
+  label: string;
+}
+
 export interface ElevationProfileSvg {
   linePath: string;
   areaPath: string;
@@ -22,6 +27,11 @@ export interface ElevationProfileSvg {
   maxEleM: number;
   width: number;
   height: number;
+  chartLeft: number;
+  chartRight: number;
+  chartBottom: number;
+  xTicks: AxisTick[];
+  yTicks: AxisTick[];
 }
 
 export interface GpxData {
@@ -140,22 +150,37 @@ export function loadGpx(publicGpxPath: string): GpxData {
   };
 }
 
-/** Builds a static SVG line+area path for the elevation profile, sampled at build time. */
+function niceStep(range: number, candidates: number[]): number {
+  for (const s of candidates) {
+    if (range / s <= 5) return s;
+  }
+  return candidates[candidates.length - 1];
+}
+
+/** Builds a static SVG line+area path for the elevation profile, sampled at build time,
+ *  plus axis ticks (distance in km, altitude in m) so the chart reads on its own. */
 export function buildElevationProfile(
   points: TrackPoint[],
-  opts: { width?: number; height?: number; padding?: number; samples?: number } = {}
+  opts: { width?: number; height?: number; samples?: number } = {}
 ): ElevationProfileSvg {
   const width = opts.width ?? 960;
   const height = opts.height ?? 240;
-  const padding = opts.padding ?? 8;
   const samples = opts.samples ?? 140;
+
+  const padLeft = 46;
+  const padRight = 10;
+  const padTop = 14;
+  const padBottom = 26;
+  const innerW = width - padLeft - padRight;
+  const innerH = height - padTop - padBottom;
 
   // cumulative distance per point, to sample evenly along the route (not per raw GPS point)
   const cum: number[] = [0];
   for (let i = 1; i < points.length; i++) {
     cum.push(cum[i - 1] + haversineMeters(points[i - 1], points[i]));
   }
-  const total = cum[cum.length - 1] || 1;
+  const totalM = cum[cum.length - 1] || 1;
+  const totalKm = totalM / 1000;
 
   const minEle = Math.min(...points.map((p) => p.ele));
   const maxEle = Math.max(...points.map((p) => p.ele));
@@ -164,26 +189,50 @@ export function buildElevationProfile(
   const sampled: number[] = [];
   let cursor = 0;
   for (let s = 0; s <= samples; s++) {
-    const targetDist = (s / samples) * total;
+    const targetDist = (s / samples) * totalM;
     while (cursor < cum.length - 2 && cum[cursor + 1] < targetDist) cursor++;
     sampled.push(points[cursor].ele);
   }
 
-  const innerW = width - padding * 2;
-  const innerH = height - padding * 2;
+  const eleToY = (ele: number) => padTop + innerH - ((ele - minEle) / eleRange) * innerH;
+
   const coords = sampled.map((ele, i) => {
-    const x = padding + (i / samples) * innerW;
-    const y = padding + innerH - ((ele - minEle) / eleRange) * innerH;
-    return [x, y] as [number, number];
+    const x = padLeft + (i / samples) * innerW;
+    return [x, eleToY(ele)] as [number, number];
   });
 
   const linePath = coords
     .map(([x, y], i) => `${i === 0 ? 'M' : 'L'} ${x.toFixed(1)} ${y.toFixed(1)}`)
     .join(' ');
 
-  const areaPath = `${linePath} L ${(padding + innerW).toFixed(1)} ${(padding + innerH).toFixed(
+  const chartBottom = padTop + innerH;
+  const areaPath = `${linePath} L ${(padLeft + innerW).toFixed(1)} ${chartBottom.toFixed(1)} L ${padLeft.toFixed(
     1
-  )} L ${padding.toFixed(1)} ${(padding + innerH).toFixed(1)} Z`;
+  )} ${chartBottom.toFixed(1)} Z`;
 
-  return { linePath, areaPath, minEleM: Math.round(minEle), maxEleM: Math.round(maxEle), width, height };
+  const kmStep = niceStep(totalKm, [1, 2, 5, 10, 20, 25, 50, 100]);
+  const xTicks: AxisTick[] = [];
+  for (let km = 0; km <= totalKm + 0.001; km += kmStep) {
+    xTicks.push({ pos: padLeft + (km / totalKm) * innerW, label: `${Math.round(km)} km` });
+  }
+
+  const eleStep = niceStep(eleRange, [25, 50, 100, 200, 250, 500, 1000, 2000]);
+  const yTicks: AxisTick[] = [];
+  for (let ele = Math.ceil(minEle / eleStep) * eleStep; ele <= maxEle; ele += eleStep) {
+    yTicks.push({ pos: eleToY(ele), label: `${Math.round(ele)} m` });
+  }
+
+  return {
+    linePath,
+    areaPath,
+    minEleM: Math.round(minEle),
+    maxEleM: Math.round(maxEle),
+    width,
+    height,
+    chartLeft: padLeft,
+    chartRight: width - padRight,
+    chartBottom,
+    xTicks,
+    yTicks,
+  };
 }

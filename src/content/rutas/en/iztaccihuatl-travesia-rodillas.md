@@ -51,7 +51,7 @@ gallery:
   - src: "/photos/placeholder-1.svg"
     alt: "Descent toward Los Portillos on day two"
 perfil_elevacion:
-  nota: "A two-day profile: sustained climbing on day one, technical descent on day two."
+  nota: "Day one is all climbing. Day two, you descend with Popocatépetl straight ahead."
 highlights:
   - "A night at a high-altitude refuge above 4,500 m"
   - "Direct views of Popocatépetl from the ridge"

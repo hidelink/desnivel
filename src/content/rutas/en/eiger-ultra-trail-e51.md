@@ -42,6 +42,7 @@ equipo_sugerido:
   - "At least 1.5 L of water plus a filter or purification tablets"
 agua_comida: "There are resupply points in the villages along the way, but the long ridge section (km 12-32) has no water source at all — plan accordingly."
 gpx_url: "/gpx/eiger-ultra-trail-e51.gpx"
+instagram_url: "https://www.instagram.com/reel/DatSWBYv_QA/"
 gallery:
   - src: "/photos/cover-eiger-ultra-trail-e51.jpg"
     alt: "The Bernese Alps at sunset"
@@ -51,7 +52,7 @@ gallery:
   - src: "/photos/placeholder-3.svg"
     alt: "Valley view from the high point of the route"
 perfil_elevacion:
-  nota: "Real elevation gain is computed directly from the GPX — over 3,000 m accumulated in a single day."
+  nota: "One long, steady climb to the ridge. Eight technical kilometers of descent at the end."
 highlights:
   - "Direct views of the Bernese Oberland's granite walls for most of the route"
   - "One of the longest, most exposed ridge sections I've run"

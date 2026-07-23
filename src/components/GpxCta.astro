@@ -5,12 +5,13 @@ interface Props {
   locale: Locale;
   gpx_url: string;
   strava_url?: string;
+  tight?: boolean;
 }
 
-const { locale, gpx_url, strava_url } = Astro.props;
+const { locale, gpx_url, strava_url, tight = false } = Astro.props;
 ---
 
-<section class="gpx-cta section">
+<section class={tight ? 'gpx-cta gpx-cta-tight' : 'gpx-cta section'}>
   <div class="wrap actions">
     <a class="btn btn-primary" href={gpx_url} download>
       {t(locale, 'gpx_cta')}
@@ -27,6 +28,9 @@ const { locale, gpx_url, strava_url } = Astro.props;
 </section>
 
 <style>
+  .gpx-cta-tight {
+    padding-block: 0 var(--sp-8);
+  }
   .actions {
     display: flex;
     gap: var(--sp-4);
@@ -37,7 +41,7 @@ const { locale, gpx_url, strava_url } = Astro.props;
     align-items: center;
     gap: var(--sp-2);
     padding: 0.75rem 1.25rem;
-    border-radius: var(--radius);
+    border-radius: var(--radius-pill);
     text-decoration: none;
     font-family: var(--font-mono);
     font-size: 0.85rem;
@@ -46,8 +50,8 @@ const { locale, gpx_url, strava_url } = Astro.props;
     transition: opacity 0.15s ease, border-color 0.15s ease;
   }
   .btn-primary {
-    background: var(--accent);
-    color: #0b0c0c;
+    background: var(--lime);
+    color: var(--lime-ink);
   }
   .btn-primary:hover {
     opacity: 0.88;
