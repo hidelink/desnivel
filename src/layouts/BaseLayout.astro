@@ -52,5 +52,24 @@ const { title, description, locale, path, alternatePath, ogImage, jsonLd, sectio
       <slot />
     </main>
     <Footer locale={locale} />
+
+    <!--
+      Netlify Identity invite/recovery links redirect to the site root with a token
+      in the URL hash (e.g. #invite_token=...). The widget only picks that up if it's
+      loaded on whatever page the link lands on — so it needs to be site-wide, not
+      just on /admin, or accepting an invite silently does nothing (as it did here).
+    -->
+    <script is:inline src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
+    <script is:inline>
+      if (window.netlifyIdentity) {
+        window.netlifyIdentity.on('init', (user) => {
+          if (!user) {
+            window.netlifyIdentity.on('login', () => {
+              document.location.href = '/admin/';
+            });
+          }
+        });
+      }
+    </script>
   </body>
 </html>
