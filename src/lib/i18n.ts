@@ -9,7 +9,8 @@ const dict = {
     nav_routes: 'Rutas',
     nav_about: 'Acerca',
     home_title: 'Desnivel',
-    home_tagline: 'Crónicas de montaña: trail running, hiking y travesías.',
+    home_tagline: 'Todo lo que necesitas para recorrer estas rutas, contado por alguien que ya las hizo.',
+    home_eyebrow: 'Trail running · Hiking · Travesías',
     routes_index_title: 'Rutas',
     routes_index_lead:
       'Un archivo editorial de rutas recorridas, documentadas con datos reales de GPX: distancia, desnivel, altitud y el relato de cada tramo.',
@@ -37,16 +38,18 @@ const dict = {
     prev_route: 'Ruta anterior',
     next_route: 'Siguiente ruta',
     theme_toggle: 'Cambiar tema',
-    footer_note: 'Rutas documentadas y publicadas por su autor.',
+    footer_note: 'Rutas documentadas y publicadas por',
     read_route: 'Ver ruta',
     about_title: 'Acerca de Desnivel',
+    where_heading: 'Dónde están las rutas',
   },
   en: {
     nav_home: 'Home',
     nav_routes: 'Routes',
     nav_about: 'About',
     home_title: 'Desnivel',
-    home_tagline: 'Mountain chronicles: trail running, hiking, and multi-day treks.',
+    home_tagline: "Everything you need to take on these routes, told by someone who's already done them.",
+    home_eyebrow: 'Trail running · Hiking · Multi-day treks',
     routes_index_title: 'Routes',
     routes_index_lead:
       'An editorial archive of routes, documented with real GPX data: distance, elevation gain, altitude, and the story of every stretch.',
@@ -74,9 +77,10 @@ const dict = {
     prev_route: 'Previous route',
     next_route: 'Next route',
     theme_toggle: 'Toggle theme',
-    footer_note: 'Routes documented and published by their author.',
+    footer_note: 'Routes documented and published by',
     read_route: 'Read route',
     about_title: 'About Desnivel',
+    where_heading: 'Where the routes are',
   },
 } as const;
 

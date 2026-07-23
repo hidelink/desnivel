@@ -43,9 +43,9 @@ equipo_sugerido:
 agua_comida: "No hay abastecimiento en la ruta. Toda el agua y comida para los dos días se carga desde La Joyita; en el refugio a veces hay agua de deshielo, pero no es algo con lo que se deba contar."
 gpx_url: "/gpx/iztaccihuatl-travesia-rodillas.gpx"
 gallery:
-  - src: "/photos/placeholder-3.svg"
-    alt: "Cresta del Iztaccíhuatl al amanecer"
-    caption: "Foto de ejemplo — reemplaza con tus propias fotos de la ruta."
+  - src: "/photos/cover-iztaccihuatl-travesia-rodillas.jpg"
+    alt: "Los volcanes Iztaccíhuatl y Popocatépetl al amanecer"
+    caption: "Foto de ejemplo (Rajko González / Wikimedia Commons, CC BY 4.0) — reemplaza con tus propias fotos de la ruta."
   - src: "/photos/placeholder-2.svg"
     alt: "Refugio de altura cerca de Las Rodillas"
   - src: "/photos/placeholder-1.svg"

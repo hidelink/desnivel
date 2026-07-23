@@ -43,9 +43,9 @@ equipo_sugerido:
 agua_comida: "Hay puntos de abastecimiento en los pueblos de paso, pero en la cresta larga (km 12-32) no hay ningún punto de agua — planifica en consecuencia."
 gpx_url: "/gpx/eiger-ultra-trail-e51.gpx"
 gallery:
-  - src: "/photos/placeholder-1.svg"
-    alt: "Vista de la cresta del Oberland bernés"
-    caption: "Foto de ejemplo — reemplaza con tus propias fotos de la ruta."
+  - src: "/photos/cover-eiger-ultra-trail-e51.jpg"
+    alt: "Los Alpes berneses al atardecer"
+    caption: "Foto de ejemplo (Reustli / Wikimedia Commons, CC BY-SA 4.0) — reemplaza con tus propias fotos de la ruta."
   - src: "/photos/placeholder-2.svg"
     alt: "Sendero técnico entre roca suelta"
   - src: "/photos/placeholder-3.svg"

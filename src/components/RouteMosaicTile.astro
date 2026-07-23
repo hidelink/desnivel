@@ -1,0 +1,104 @@
+---
+import { routePath, translateDifficulty, translateType, type Locale } from '../lib/i18n';
+import { DEFAULT_COVER_IMAGE } from '../lib/media';
+
+interface Props {
+  locale: Locale;
+  slug: string;
+  titulo: string;
+  subtitulo: string;
+  zona: string;
+  tipo: string;
+  distancia_km: number;
+  desnivel_m: number;
+  dificultad: string;
+  coverImage?: { src: string; alt: string };
+}
+
+const {
+  locale,
+  slug,
+  titulo,
+  subtitulo,
+  zona,
+  tipo,
+  distancia_km,
+  desnivel_m,
+  dificultad,
+  coverImage,
+} = Astro.props;
+
+const image = coverImage ?? DEFAULT_COVER_IMAGE;
+---
+
+<a class="tile" href={routePath(locale, slug)}>
+  <img src={image.src} alt={image.alt} loading="lazy" />
+  <div class="scrim"></div>
+  <div class="body">
+    <p class="eyebrow">
+      <span>{translateType(locale, tipo)}</span>
+      <span aria-hidden="true">·</span>
+      <span>{zona}</span>
+    </p>
+    <h3>{titulo}</h3>
+    <p class="subtitulo">{subtitulo}</p>
+    <p class="stats mono">
+      {distancia_km} km · {desnivel_m} m+ · {translateDifficulty(locale, dificultad)}
+    </p>
+  </div>
+</a>
+
+<style>
+  .tile {
+    position: relative;
+    display: block;
+    aspect-ratio: 4 / 5;
+    border-radius: var(--radius);
+    overflow: hidden;
+    text-decoration: none;
+    color: var(--text);
+    isolation: isolate;
+  }
+  .tile img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: transform 0.4s ease;
+  }
+  .tile:hover img {
+    transform: scale(1.03);
+  }
+  .scrim {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, transparent 40%, rgba(11, 12, 12, 0.88) 100%);
+    z-index: 1;
+  }
+  .body {
+    position: absolute;
+    inset: auto 0 0 0;
+    z-index: 2;
+    padding: var(--sp-5);
+    color: #f2f1ed;
+  }
+  .body .eyebrow {
+    color: #e0c4a8;
+    margin-bottom: var(--sp-2);
+  }
+  .body h3 {
+    color: #f2f1ed;
+    font-size: 1.2rem;
+  }
+  .subtitulo {
+    margin-top: var(--sp-2);
+    font-size: 0.9rem;
+    color: #d8d6cf;
+    max-width: 34ch;
+  }
+  .stats {
+    margin-top: var(--sp-3);
+    font-size: 0.75rem;
+    color: #b8b6ae;
+  }
+</style>

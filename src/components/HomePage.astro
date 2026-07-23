@@ -1,8 +1,10 @@
 ---
 import { getCollection } from 'astro:content';
 import BaseLayout from '../layouts/BaseLayout.astro';
-import RouteCard from './RouteCard.astro';
-import { t, localePath, routePath, type Locale } from '../lib/i18n';
+import WorldMap from './WorldMap.astro';
+import RouteMosaicTile from './RouteMosaicTile.astro';
+import { loadGpx } from '../lib/gpx';
+import { t, localePath, type Locale } from '../lib/i18n';
 
 interface Props {
   locale: Locale;
@@ -11,7 +13,19 @@ interface Props {
 const { locale } = Astro.props;
 
 const entries = await getCollection('rutas', (e) => e.id.startsWith(`${locale}/`) && !e.data.draft);
-const latest = [...entries].sort((a, b) => b.data.fecha.getTime() - a.data.fecha.getTime()).slice(0, 3);
+const routes = [...entries].sort((a, b) => b.data.fecha.getTime() - a.data.fecha.getTime());
+
+const pins = routes.map((entry) => {
+  const gpx = loadGpx(entry.data.gpx_url);
+  return {
+    lat: gpx.center[0],
+    lon: gpx.center[1],
+    slug: entry.data.slug,
+    titulo: entry.data.titulo,
+    zona: entry.data.zona,
+  };
+});
+
 ---
 
 <BaseLayout
@@ -27,17 +41,19 @@ const latest = [...entries].sort((a, b) => b.data.fecha.getTime() - a.data.fecha
   <section class="hero">
     <div class="contours" aria-hidden="true"></div>
     <div class="wrap">
-      <p class="eyebrow">Trail running · Hiking · Travesías</p>
+      <p class="eyebrow">{t(locale, 'home_eyebrow')}</p>
       <h1>{t(locale, 'home_tagline')}</h1>
       <a class="btn-primary" href={localePath(locale, '/rutas')}>{t(locale, 'nav_routes')} →</a>
     </div>
   </section>
 
+  <WorldMap locale={locale} pins={pins} />
+
   <section class="section">
     <div class="wrap">
-      <div class="list">
-        {latest.map((entry) => (
-          <RouteCard
+      <div class="mosaic">
+        {routes.map((entry) => (
+          <RouteMosaicTile
             locale={locale}
             slug={entry.data.slug}
             titulo={entry.data.titulo}
@@ -58,7 +74,7 @@ const latest = [...entries].sort((a, b) => b.data.fecha.getTime() - a.data.fecha
 <style>
   .hero {
     position: relative;
-    padding-block: var(--sp-24) var(--sp-16);
+    padding-block: var(--sp-12) var(--sp-8);
     overflow: hidden;
   }
   .contours {
@@ -88,5 +104,20 @@ const latest = [...entries].sort((a, b) => b.data.fecha.getTime() - a.data.fecha
     border-radius: var(--radius);
     font-family: var(--font-mono);
     font-size: 0.9rem;
+  }
+  .mosaic {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--sp-6);
+  }
+  @media (min-width: 640px) {
+    .mosaic {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+  @media (min-width: 1024px) {
+    .mosaic {
+      grid-template-columns: repeat(3, 1fr);
+    }
   }
 </style>

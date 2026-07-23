@@ -43,9 +43,9 @@ equipo_sugerido:
 agua_comida: "There are resupply points in the villages along the way, but the long ridge section (km 12-32) has no water source at all — plan accordingly."
 gpx_url: "/gpx/eiger-ultra-trail-e51.gpx"
 gallery:
-  - src: "/photos/placeholder-1.svg"
-    alt: "View of the Bernese Oberland ridgeline"
-    caption: "Example photo — replace with your own route photos."
+  - src: "/photos/cover-eiger-ultra-trail-e51.jpg"
+    alt: "The Bernese Alps at sunset"
+    caption: "Example photo (Reustli / Wikimedia Commons, CC BY-SA 4.0) — replace with your own route photos."
   - src: "/photos/placeholder-2.svg"
     alt: "Technical trail through loose rock"
   - src: "/photos/placeholder-3.svg"

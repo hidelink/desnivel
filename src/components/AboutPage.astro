@@ -45,6 +45,12 @@ const c = copy[locale];
         <p class="lead">{c.lead}</p>
         {c.body.map((p) => <p>{p}</p>)}
       </div>
+      <div class="contact">
+        <p class="eyebrow">{locale === 'es' ? 'Autor' : 'Author'}</p>
+        <a class="ig-link" href="https://www.instagram.com/hidelink" target="_blank" rel="noopener noreferrer">
+          Instagram — @hidelink
+        </a>
+      </div>
     </div>
   </section>
 </BaseLayout>
@@ -59,5 +65,23 @@ const c = copy[locale];
   .lead {
     font-size: 1.2rem;
     color: var(--text-muted);
+  }
+  .contact {
+    margin-top: var(--sp-12);
+    padding-top: var(--sp-8);
+    border-top: 1px solid var(--border);
+  }
+  .contact .eyebrow {
+    margin-bottom: var(--sp-2);
+  }
+  .ig-link {
+    display: inline-block;
+    font-family: var(--font-mono);
+    font-size: 1rem;
+    color: var(--accent);
+    text-decoration: none;
+  }
+  .ig-link:hover {
+    text-decoration: underline;
   }
 </style>

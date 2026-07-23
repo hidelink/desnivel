@@ -43,9 +43,9 @@ equipo_sugerido:
 agua_comida: "No hay ningún punto de agua ni abastecimiento dentro del parque en este circuito — todo lo que necesites lo llevas desde el estacionamiento."
 gpx_url: "/gpx/nevado-de-toluca-circuito-crater.gpx"
 gallery:
-  - src: "/photos/placeholder-2.svg"
-    alt: "Vista del cráter del Nevado de Toluca"
-    caption: "Foto de ejemplo — reemplaza con tus propias fotos de la ruta."
+  - src: "/photos/cover-nevado-de-toluca-circuito-crater.jpg"
+    alt: "Paisaje del Nevado de Toluca"
+    caption: "Foto de ejemplo (Juan Carlos Fonseca Mata / Wikimedia Commons, CC BY-SA 4.0) — reemplaza con tus propias fotos de la ruta."
   - src: "/photos/placeholder-1.svg"
     alt: "Lagunas del cráter vistas desde la subida"
   - src: "/photos/placeholder-3.svg"

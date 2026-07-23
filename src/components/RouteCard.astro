@@ -1,5 +1,6 @@
 ---
 import { t, routePath, translateDifficulty, translateType, type Locale } from '../lib/i18n';
+import { DEFAULT_COVER_IMAGE } from '../lib/media';
 
 interface Props {
   locale: Locale;
@@ -16,14 +17,14 @@ interface Props {
 
 const { locale, slug, titulo, subtitulo, zona, tipo, distancia_km, desnivel_m, dificultad, coverImage } =
   Astro.props;
+
+const image = coverImage ?? DEFAULT_COVER_IMAGE;
 ---
 
 <a class="route-card" href={routePath(locale, slug)}>
-  {coverImage && (
-    <div class="cover">
-      <img src={coverImage.src} alt={coverImage.alt} loading="lazy" />
-    </div>
-  )}
+  <div class="cover">
+    <img src={image.src} alt={image.alt} loading="lazy" />
+  </div>
   <div class="body">
     <p class="eyebrow">
       <span>{translateType(locale, tipo)}</span>

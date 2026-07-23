@@ -10,7 +10,12 @@ const year = 2026;
 
 <footer class="site-footer">
   <div class="wrap bar">
-    <p class="eyebrow">{t(locale, 'footer_note')}</p>
+    <p class="eyebrow">
+      {t(locale, 'footer_note')}
+      <a class="ig-link" href="https://www.instagram.com/hidelink" target="_blank" rel="noopener noreferrer">
+        @hidelink
+      </a>
+    </p>
     <nav aria-label="Footer">
       <a href={localePath(locale, '/')}>{t(locale, 'nav_home')}</a>
       <a href={localePath(locale, '/rutas')}>{t(locale, 'nav_routes')}</a>
@@ -44,5 +49,12 @@ const year = 2026;
   }
   nav a:hover {
     color: var(--accent);
+  }
+  .ig-link {
+    color: var(--accent);
+    text-decoration: none;
+  }
+  .ig-link:hover {
+    text-decoration: underline;
   }
 </style>

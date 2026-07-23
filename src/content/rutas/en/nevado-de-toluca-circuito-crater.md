@@ -43,9 +43,9 @@ equipo_sugerido:
 agua_comida: "There's no water or resupply point inside the park on this circuit — whatever you need, you carry from the parking area."
 gpx_url: "/gpx/nevado-de-toluca-circuito-crater.gpx"
 gallery:
-  - src: "/photos/placeholder-2.svg"
-    alt: "View of the Nevado de Toluca crater"
-    caption: "Example photo — replace with your own route photos."
+  - src: "/photos/cover-nevado-de-toluca-circuito-crater.jpg"
+    alt: "Landscape of Nevado de Toluca"
+    caption: "Example photo (Juan Carlos Fonseca Mata / Wikimedia Commons, CC BY-SA 4.0) — replace with your own route photos."
   - src: "/photos/placeholder-1.svg"
     alt: "Crater lagoons seen from the climb"
   - src: "/photos/placeholder-3.svg"

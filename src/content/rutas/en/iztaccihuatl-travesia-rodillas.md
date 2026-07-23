@@ -43,9 +43,9 @@ equipo_sugerido:
 agua_comida: "There's no resupply on the route. All water and food for both days is carried from La Joyita; the refuge sometimes has meltwater, but it's not something to count on."
 gpx_url: "/gpx/iztaccihuatl-travesia-rodillas.gpx"
 gallery:
-  - src: "/photos/placeholder-3.svg"
-    alt: "Iztaccíhuatl ridge at sunrise"
-    caption: "Example photo — replace with your own route photos."
+  - src: "/photos/cover-iztaccihuatl-travesia-rodillas.jpg"
+    alt: "Iztaccíhuatl and Popocatépetl volcanoes at sunrise"
+    caption: "Example photo (Rajko González / Wikimedia Commons, CC BY 4.0) — replace with your own route photos."
   - src: "/photos/placeholder-2.svg"
     alt: "High-altitude refuge near Las Rodillas"
   - src: "/photos/placeholder-1.svg"
