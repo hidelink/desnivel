@@ -1,0 +1,85 @@
+---
+import { t, routePath, localePath, type Locale } from '../lib/i18n';
+
+interface RouteRef {
+  slug: string;
+  titulo: string;
+}
+
+interface Props {
+  locale: Locale;
+  prev?: RouteRef;
+  next?: RouteRef;
+}
+
+const { locale, prev, next } = Astro.props;
+---
+
+<nav class="route-nav section" aria-label={t(locale, 'more_routes')}>
+  <div class="wrap grid">
+    <a class="back" href={localePath(locale, '/rutas')}>← {t(locale, 'back_to_routes')}</a>
+    <div class="pair">
+      {prev && (
+        <a class="ref prev" href={routePath(locale, prev.slug)}>
+          <span class="eyebrow">{t(locale, 'prev_route')}</span>
+          <span>{prev.titulo}</span>
+        </a>
+      )}
+      {next && (
+        <a class="ref next" href={routePath(locale, next.slug)}>
+          <span class="eyebrow">{t(locale, 'next_route')}</span>
+          <span>{next.titulo}</span>
+        </a>
+      )}
+    </div>
+  </div>
+</nav>
+
+<style>
+  .grid {
+    border-top: 1px solid var(--border);
+    padding-top: var(--sp-8);
+  }
+  .back {
+    display: inline-block;
+    margin-bottom: var(--sp-8);
+    text-decoration: none;
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+  }
+  .back:hover {
+    color: var(--accent);
+  }
+  .pair {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--sp-6);
+  }
+  .ref {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-2);
+    text-decoration: none;
+    color: var(--text);
+    padding: var(--sp-4);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+  }
+  .ref:hover {
+    border-color: var(--accent);
+  }
+  .next {
+    text-align: right;
+    grid-column: 2;
+  }
+  @media (max-width: 640px) {
+    .pair {
+      grid-template-columns: 1fr;
+    }
+    .next {
+      grid-column: 1;
+      text-align: left;
+    }
+  }
+</style>

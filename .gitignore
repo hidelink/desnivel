@@ -1,0 +1,22 @@
+# build output
+dist/
+.astro/
+
+# dependencies
+node_modules/
+
+# environment
+.env
+.env.*
+!.env.example
+
+# editor / os
+.DS_Store
+.vscode/*
+!.vscode/extensions.json
+
+# logs
+npm-debug.log*
+
+# legacy python prototype (archived, not part of the Astro site)
+_legacy-trail-analyzer/.venv/

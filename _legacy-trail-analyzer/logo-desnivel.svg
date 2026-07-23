@@ -1,0 +1,133 @@
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bgGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#141414"/>
+      <stop offset="100%" stop-color="#0a0a0a"/>
+    </linearGradient>
+    <linearGradient id="routeGrad" x1="0" y1="1" x2="1" y2="0">
+      <stop offset="0%" stop-color="#ff8c3a"/>
+      <stop offset="60%" stop-color="#e8650a"/>
+      <stop offset="100%" stop-color="#c94f00"/>
+    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="6" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="softglow">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <clipPath id="roundClip">
+      <rect width="512" height="512" rx="112" ry="112"/>
+    </clipPath>
+  </defs>
+
+  <!-- Background -->
+  <rect width="512" height="512" rx="112" ry="112" fill="url(#bgGrad)"/>
+
+  <!-- Subtle grid lines (topographic feel) -->
+  <g opacity="0.04" stroke="#ffffff" stroke-width="1">
+    <line x1="0" y1="160" x2="512" y2="160"/>
+    <line x1="0" y1="240" x2="512" y2="240"/>
+    <line x1="0" y1="320" x2="512" y2="320"/>
+    <line x1="0" y1="400" x2="512" y2="400"/>
+    <line x1="128" y1="0" x2="128" y2="512"/>
+    <line x1="256" y1="0" x2="256" y2="512"/>
+    <line x1="384" y1="0" x2="384" y2="512"/>
+  </g>
+
+  <!-- Mountain silhouette (background, subtle) -->
+  <path d="M 30 420 L 170 185 L 230 260 L 256 220 L 282 260 L 342 185 L 482 420 Z"
+        fill="#1c1c1c" opacity="0.9"/>
+
+  <!-- Mountain inner shading (depth) -->
+  <path d="M 170 185 L 210 240 L 256 220 L 302 240 L 342 185 L 400 310 L 256 310 L 112 310 Z"
+        fill="#202020" opacity="0.6"/>
+
+  <!-- Snow cap hint on main peak -->
+  <path d="M 256 220 L 240 248 L 256 242 L 272 248 Z"
+        fill="#2a2a2a" opacity="0.8"/>
+
+  <!-- Elevation profile / route line — the hero element -->
+  <!-- Goes: flat start → gentle rise → steep climb → PEAK → descent -->
+  <path d="M 52 390
+           C 80 388, 108 384, 130 362
+           C 152 340, 162 308, 178 280
+           C 194 252, 212 230, 228 208
+           C 240 190, 250 172, 256 152
+           C 262 172, 268 190, 280 208
+           C 296 230, 316 256, 336 288
+           C 356 320, 374 350, 400 370
+           C 424 386, 446 390, 462 392"
+        fill="none"
+        stroke="url(#routeGrad)"
+        stroke-width="14"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        filter="url(#glow)"
+        opacity="0.95"/>
+
+  <!-- Route line clean (on top of glow, sharper) -->
+  <path d="M 52 390
+           C 80 388, 108 384, 130 362
+           C 152 340, 162 308, 178 280
+           C 194 252, 212 230, 228 208
+           C 240 190, 250 172, 256 152
+           C 262 172, 268 190, 280 208
+           C 296 230, 316 256, 336 288
+           C 356 320, 374 350, 400 370
+           C 424 386, 446 390, 462 392"
+        fill="none"
+        stroke="url(#routeGrad)"
+        stroke-width="10"
+        stroke-linecap="round"
+        stroke-linejoin="round"/>
+
+  <!-- Fill below the route line (elevation area) -->
+  <path d="M 52 390
+           C 80 388, 108 384, 130 362
+           C 152 340, 162 308, 178 280
+           C 194 252, 212 230, 228 208
+           C 240 190, 250 172, 256 152
+           C 262 172, 268 190, 280 208
+           C 296 230, 316 256, 336 288
+           C 356 320, 374 350, 400 370
+           C 424 386, 446 390, 462 392
+           L 462 420 L 52 420 Z"
+        fill="url(#routeGrad)"
+        opacity="0.08"/>
+
+  <!-- Start dot (teal) -->
+  <circle cx="52" cy="390" r="10" fill="#1a1a1a" stroke="#4fc3f7" stroke-width="3"/>
+  <circle cx="52" cy="390" r="4"  fill="#4fc3f7"/>
+
+  <!-- Peak dot (bright orange, the hero dot) -->
+  <circle cx="256" cy="152" r="16" fill="#0d0d0d" filter="url(#softglow)"/>
+  <circle cx="256" cy="152" r="16" fill="#e8650a" opacity="0.15"/>
+  <circle cx="256" cy="152" r="10" fill="#0d0d0d" stroke="#e8650a" stroke-width="3.5"/>
+  <circle cx="256" cy="152" r="4"  fill="#ff8c3a"/>
+
+  <!-- End dot -->
+  <circle cx="462" cy="392" r="8" fill="#1a1a1a" stroke="#888" stroke-width="2.5"/>
+  <circle cx="462" cy="392" r="3" fill="#666"/>
+
+  <!-- Bottom text: DESNIVEL -->
+  <text x="256" y="464"
+        font-family="-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Arial, sans-serif"
+        font-size="52"
+        font-weight="800"
+        letter-spacing="6"
+        text-anchor="middle"
+        fill="#ffffff"
+        opacity="0.92">DESNIVEL</text>
+
+  <!-- Subtle bottom tagline -->
+  <text x="256" y="488"
+        font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif"
+        font-size="14"
+        font-weight="500"
+        letter-spacing="4"
+        text-anchor="middle"
+        fill="#e8650a"
+        opacity="0.7">TRAIL ANALYZER</text>
+</svg>

@@ -1,0 +1,16 @@
+<svg width="800" height="1000" viewBox="0 0 800 1000" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#141615"/>
+      <stop offset="100%" stop-color="#0b0c0c"/>
+    </linearGradient>
+  </defs>
+  <rect width="800" height="1000" fill="url(#bg)"/>
+  <g opacity="0.06" stroke="#ffffff" stroke-width="1">
+    <line x1="0" y1="0" x2="800" y2="0"/><line x1="0" y1="166.66666666666666" x2="800" y2="166.66666666666666"/><line x1="0" y1="333.3333333333333" x2="800" y2="333.3333333333333"/><line x1="0" y1="500" x2="800" y2="500"/><line x1="0" y1="666.6666666666666" x2="800" y2="666.6666666666666"/><line x1="0" y1="833.3333333333333" x2="800" y2="833.3333333333333"/>
+  </g>
+  <path d="M 0 1000 L 0.0 381.4 L 100.0 302.0 L 200.0 434.9 L 300.0 548.7 L 400.0 119.9 L 500.0 318.0 L 600.0 497.7 L 700.0 480.9 L 800.0 312.4 L 800 1000 Z" fill="#1c1e1c"/>
+  <path d="M 0 1000 L 0.0 517.6 L 100.0 420.2 L 200.0 502.5 L 300.0 718.3 L 400.0 313.7 L 500.0 421.7 L 600.0 488.5 L 700.0 696.6 L 800.0 550.8 L 800 1000 Z" fill="#242624" opacity="0.85"/>
+  <path d="M 0 500 Q 400 420 800 500" stroke="#4fc3f7" stroke-width="3" fill="none" opacity="0.55"/>
+  <text x="400" y="960" text-anchor="middle" font-family="monospace" font-size="18" letter-spacing="3" fill="#666">PLACEHOLDER — REPLACE WITH REAL PHOTO</text>
+</svg>

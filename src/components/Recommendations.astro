@@ -1,0 +1,87 @@
+---
+import { t, type Locale } from '../lib/i18n';
+
+interface Props {
+  locale: Locale;
+  recomendaciones: string[];
+  clima_ideal: string;
+  equipo_sugerido: string[];
+  agua_comida: string;
+}
+
+const { locale, recomendaciones, clima_ideal, equipo_sugerido, agua_comida } = Astro.props;
+---
+
+<section class="recommendations-block section">
+  <div class="wrap grid">
+    <div class="panel">
+      <p class="eyebrow">{t(locale, 'recommendations_heading')}</p>
+      <ul class="prose">
+        {recomendaciones.map((item) => <li>{item}</li>)}
+      </ul>
+    </div>
+    <div class="side">
+      <div class="side-item">
+        <p class="eyebrow">{t(locale, 'weather_heading')}</p>
+        <p>{clima_ideal}</p>
+      </div>
+      <div class="side-item">
+        <p class="eyebrow">{t(locale, 'gear_heading')}</p>
+        <ul class="mono">
+          {equipo_sugerido.map((item) => <li>{item}</li>)}
+        </ul>
+      </div>
+      <div class="side-item">
+        <p class="eyebrow">{t(locale, 'water_food_heading')}</p>
+        <p>{agua_comida}</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .grid {
+    display: grid;
+    grid-template-columns: 1.4fr 1fr;
+    gap: var(--sp-16);
+  }
+  .panel {
+    border-left: 3px solid var(--accent);
+    padding-left: var(--sp-6);
+  }
+  .panel .eyebrow {
+    color: var(--accent);
+    margin-bottom: var(--sp-3);
+  }
+  .panel ul {
+    margin: 0;
+    padding-left: 1.1em;
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-2);
+  }
+  .side {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-6);
+  }
+  .side-item ul {
+    margin: var(--sp-2) 0 0;
+    padding: 0;
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-1);
+    font-size: 0.85rem;
+  }
+  .side-item p {
+    margin-top: var(--sp-2);
+    color: var(--text-muted);
+  }
+  @media (max-width: 768px) {
+    .grid {
+      grid-template-columns: 1fr;
+      gap: var(--sp-8);
+    }
+  }
+</style>

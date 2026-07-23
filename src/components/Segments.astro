@@ -1,0 +1,71 @@
+---
+import { t, type Locale } from '../lib/i18n';
+
+interface Segment {
+  title: string;
+  label: string;
+  copy: string;
+}
+
+interface Props {
+  locale: Locale;
+  segmentos: Segment[];
+}
+
+const { locale, segmentos } = Astro.props;
+---
+
+{segmentos.length > 0 && (
+  <section class="segments-block section">
+    <div class="wrap">
+      <h2>{t(locale, 'segments_heading')}</h2>
+      <ol class="segments">
+        {segmentos.map((seg, i) => (
+          <li class="segment">
+            <div class="segment-index mono">{String(i + 1).padStart(2, '0')}</div>
+            <div class="segment-body">
+              <p class="eyebrow">{seg.label}</p>
+              <h3>{seg.title}</h3>
+              <p class="prose">{seg.copy}</p>
+            </div>
+          </li>
+        ))}
+      </ol>
+    </div>
+  </section>
+)}
+
+<style>
+  .segments {
+    list-style: none;
+    margin: var(--sp-8) 0 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-8);
+  }
+  .segment {
+    display: grid;
+    grid-template-columns: 3rem 1fr;
+    gap: var(--sp-6);
+    border-top: 1px solid var(--border);
+    padding-top: var(--sp-6);
+  }
+  .segment:first-child {
+    border-top: none;
+    padding-top: 0;
+  }
+  .segment-index {
+    color: var(--accent);
+    font-size: 1.1rem;
+  }
+  .segment-body h3 {
+    margin: var(--sp-1) 0 var(--sp-3);
+  }
+  @media (max-width: 640px) {
+    .segment {
+      grid-template-columns: 2rem 1fr;
+      gap: var(--sp-4);
+    }
+  }
+</style>

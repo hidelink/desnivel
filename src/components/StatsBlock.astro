@@ -1,0 +1,96 @@
+---
+import { t, translateDifficulty, type Locale } from '../lib/i18n';
+
+interface Props {
+  locale: Locale;
+  distancia_km: number;
+  desnivel_m: number;
+  altitud_max_m: number;
+  tiempo_estimado: string;
+  dificultad: string;
+  inicio: string;
+  fin: string;
+}
+
+const {
+  locale,
+  distancia_km,
+  desnivel_m,
+  altitud_max_m,
+  tiempo_estimado,
+  dificultad,
+  inicio,
+  fin,
+} = Astro.props;
+
+const stats = [
+  { label: t(locale, 'stat_distance'), value: `${distancia_km} km` },
+  { label: t(locale, 'stat_gain'), value: `${desnivel_m} m` },
+  { label: t(locale, 'stat_max_alt'), value: `${altitud_max_m} m` },
+  { label: t(locale, 'stat_time'), value: tiempo_estimado },
+  { label: t(locale, 'stat_difficulty'), value: translateDifficulty(locale, dificultad) },
+];
+---
+
+<section class="stats-block section">
+  <div class="wrap">
+    <dl class="stats-grid">
+      {stats.map((s) => (
+        <div class="stat">
+          <dt class="eyebrow">{s.label}</dt>
+          <dd class="mono">{s.value}</dd>
+        </div>
+      ))}
+    </dl>
+    <div class="endpoints">
+      <div>
+        <p class="eyebrow">{t(locale, 'stat_start')}</p>
+        <p>{inicio}</p>
+      </div>
+      <div class="line" aria-hidden="true"></div>
+      <div>
+        <p class="eyebrow">{t(locale, 'stat_end')}</p>
+        <p>{fin}</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: var(--sp-4);
+    margin: 0 0 var(--sp-8);
+    padding: 0;
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    padding-block: var(--sp-6);
+  }
+  .stat dt {
+    margin-bottom: var(--sp-2);
+  }
+  .stat dd {
+    margin: 0;
+    font-size: 1.4rem;
+    font-weight: 600;
+  }
+  .endpoints {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-4);
+  }
+  .endpoints p:last-child {
+    margin-top: var(--sp-1);
+  }
+  .line {
+    flex: 1;
+    height: 1px;
+    background: repeating-linear-gradient(90deg, var(--border) 0 6px, transparent 6px 12px);
+  }
+  @media (max-width: 768px) {
+    .stats-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+</style>

@@ -1,0 +1,78 @@
+---
+import { t, routePath, translateDifficulty, translateType, type Locale } from '../lib/i18n';
+
+interface Props {
+  locale: Locale;
+  slug: string;
+  titulo: string;
+  subtitulo: string;
+  zona: string;
+  tipo: string;
+  distancia_km: number;
+  desnivel_m: number;
+  dificultad: string;
+  coverImage?: { src: string; alt: string };
+}
+
+const { locale, slug, titulo, subtitulo, zona, tipo, distancia_km, desnivel_m, dificultad, coverImage } =
+  Astro.props;
+---
+
+<a class="route-card" href={routePath(locale, slug)}>
+  {coverImage && (
+    <div class="cover">
+      <img src={coverImage.src} alt={coverImage.alt} loading="lazy" />
+    </div>
+  )}
+  <div class="body">
+    <p class="eyebrow">
+      <span>{translateType(locale, tipo)}</span>
+      <span aria-hidden="true">·</span>
+      <span>{zona}</span>
+    </p>
+    <h3>{titulo}</h3>
+    <p class="subtitulo">{subtitulo}</p>
+    <p class="stats mono">
+      {distancia_km} km · {desnivel_m} m+ · {translateDifficulty(locale, dificultad)}
+    </p>
+    <span class="cta">{t(locale, 'read_route')} →</span>
+  </div>
+</a>
+
+<style>
+  .route-card {
+    display: block;
+    text-decoration: none;
+    color: var(--text);
+    border-top: 1px solid var(--border);
+    padding-block: var(--sp-8);
+  }
+  .cover {
+    margin-bottom: var(--sp-4);
+  }
+  .cover img {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    object-fit: cover;
+    border-radius: var(--radius);
+  }
+  .body h3 {
+    margin: var(--sp-2) 0 var(--sp-2);
+  }
+  .subtitulo {
+    color: var(--text-muted);
+    max-width: 55ch;
+  }
+  .stats {
+    margin-top: var(--sp-3);
+    font-size: 0.8rem;
+    color: var(--text-muted);
+  }
+  .cta {
+    display: inline-block;
+    margin-top: var(--sp-4);
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    color: var(--accent);
+  }
+</style>

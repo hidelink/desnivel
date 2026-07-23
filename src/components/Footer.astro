@@ -1,0 +1,48 @@
+---
+import { t, localePath, type Locale } from '../lib/i18n';
+
+interface Props {
+  locale: Locale;
+}
+const { locale } = Astro.props;
+const year = 2026;
+---
+
+<footer class="site-footer">
+  <div class="wrap bar">
+    <p class="eyebrow">{t(locale, 'footer_note')}</p>
+    <nav aria-label="Footer">
+      <a href={localePath(locale, '/')}>{t(locale, 'nav_home')}</a>
+      <a href={localePath(locale, '/rutas')}>{t(locale, 'nav_routes')}</a>
+      <a href={localePath(locale, '/acerca')}>{t(locale, 'nav_about')}</a>
+    </nav>
+    <p class="eyebrow">© {year} Desnivel</p>
+  </div>
+</footer>
+
+<style>
+  .site-footer {
+    border-top: 1px solid var(--border);
+    margin-top: var(--sp-24);
+  }
+  .bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--sp-4);
+    padding-block: var(--sp-8);
+  }
+  nav {
+    display: flex;
+    gap: var(--sp-6);
+  }
+  nav a {
+    text-decoration: none;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+  }
+  nav a:hover {
+    color: var(--accent);
+  }
+</style>

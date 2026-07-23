@@ -1,0 +1,63 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { t, localePath, type Locale } from '../lib/i18n';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+
+const copy = {
+  es: {
+    lead: 'Desnivel es un archivo personal de rutas de trail running, hiking y travesías — cada una documentada con datos reales de GPX y contada como lo que fue: una crónica, no una ficha genérica.',
+    body: [
+      'No es una herramienta para analizar cualquier GPX que subas. Es un cuaderno de campo público: cada ruta que aparece aquí la recorrí, la medí y la escribí yo mismo.',
+      'El objetivo es simple — que quien quiera intentar alguna de estas rutas tenga la información técnica (distancia, desnivel, altitud, segmentos) y también el contexto humano (qué esperar, qué llevar, qué cuidar) que a mí me hubiera gustado tener antes de salir.',
+    ],
+  },
+  en: {
+    lead: 'Desnivel is a personal archive of trail running, hiking, and multi-day routes — each one documented with real GPX data and told for what it was: a chronicle, not a generic spec sheet.',
+    body: [
+      "It's not a tool to analyze any GPX you upload. It's a public field notebook: every route here is one I ran, measured, and wrote myself.",
+      "The goal is simple — anyone considering one of these routes should have the technical data (distance, elevation, altitude, segments) and the human context (what to expect, what to bring, what to watch for) I wish I'd had before heading out.",
+    ],
+  },
+} as const;
+
+const c = copy[locale];
+---
+
+<BaseLayout
+  title={t(locale, 'about_title')}
+  description={c.lead}
+  locale={locale}
+  path={localePath(locale, '/acerca')}
+  alternatePath={locale === 'es' ? '/en/acerca' : '/acerca'}
+  section="about"
+  esPath="/acerca"
+  enPath="/en/acerca"
+>
+  <section class="section">
+    <div class="wrap">
+      <h1>{t(locale, 'about_title')}</h1>
+      <div class="prose body">
+        <p class="lead">{c.lead}</p>
+        {c.body.map((p) => <p>{p}</p>)}
+      </div>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .body {
+    margin-top: var(--sp-8);
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-4);
+  }
+  .lead {
+    font-size: 1.2rem;
+    color: var(--text-muted);
+  }
+</style>

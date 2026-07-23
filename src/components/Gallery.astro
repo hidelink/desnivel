@@ -1,0 +1,75 @@
+---
+import { t, type Locale } from '../lib/i18n';
+
+interface Photo {
+  src: string;
+  alt: string;
+  caption?: string;
+}
+
+interface Props {
+  locale: Locale;
+  gallery: Photo[];
+}
+
+const { locale, gallery } = Astro.props;
+---
+
+{gallery.length > 0 && (
+  <section class="gallery-block section">
+    <div class="wrap">
+      <p class="eyebrow">{t(locale, 'gallery_heading')}</p>
+      <div class="grid">
+        {gallery.map((photo) => (
+          <figure>
+            <img src={photo.src} alt={photo.alt} loading="lazy" />
+            {photo.caption && <figcaption>{photo.caption}</figcaption>}
+          </figure>
+        ))}
+      </div>
+    </div>
+  </section>
+)}
+
+<style>
+  .grid {
+    margin-top: var(--sp-6);
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--sp-4);
+  }
+  figure {
+    margin: 0;
+  }
+  img {
+    width: 100%;
+    aspect-ratio: 4 / 5;
+    object-fit: cover;
+    border-radius: var(--radius);
+  }
+  figcaption {
+    margin-top: var(--sp-2);
+    font-size: 0.8rem;
+    color: var(--text-muted);
+  }
+  .grid figure:first-child {
+    grid-column: span 2;
+    grid-row: span 2;
+  }
+  .grid figure:first-child img {
+    aspect-ratio: 1 / 1;
+    height: 100%;
+  }
+  @media (max-width: 768px) {
+    .grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+    .grid figure:first-child {
+      grid-column: span 2;
+      grid-row: span 1;
+    }
+    .grid figure:first-child img {
+      aspect-ratio: 4 / 5;
+    }
+  }
+</style>

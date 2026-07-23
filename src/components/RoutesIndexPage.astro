@@ -1,0 +1,61 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import RouteCard from './RouteCard.astro';
+import { t, localePath, type Locale } from '../lib/i18n';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+
+const entries = await getCollection('rutas', (e) => e.id.startsWith(`${locale}/`) && !e.data.draft);
+const sorted = [...entries].sort((a, b) => b.data.fecha.getTime() - a.data.fecha.getTime());
+---
+
+<BaseLayout
+  title={t(locale, 'routes_index_title')}
+  description={t(locale, 'routes_index_lead')}
+  locale={locale}
+  path={localePath(locale, '/rutas')}
+  alternatePath={locale === 'es' ? '/en/rutas' : '/rutas'}
+  section="routes"
+  esPath="/rutas"
+  enPath="/en/rutas"
+>
+  <section class="section">
+    <div class="wrap">
+      <h1>{t(locale, 'routes_index_title')}</h1>
+      <p class="prose lead">{t(locale, 'routes_index_lead')}</p>
+
+      <div class="list">
+        {sorted.map((entry) => (
+          <RouteCard
+            locale={locale}
+            slug={entry.data.slug}
+            titulo={entry.data.titulo}
+            subtitulo={entry.data.subtitulo}
+            zona={entry.data.zona}
+            tipo={entry.data.tipo}
+            distancia_km={entry.data.distancia_km}
+            desnivel_m={entry.data.desnivel_m}
+            dificultad={entry.data.dificultad}
+            coverImage={entry.data.gallery[0]}
+          />
+        ))}
+      </div>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .lead {
+    margin-top: var(--sp-4);
+    color: var(--text-muted);
+    font-size: 1.1rem;
+  }
+  .list {
+    margin-top: var(--sp-8);
+  }
+</style>

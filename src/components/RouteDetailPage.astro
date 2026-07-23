@@ -1,0 +1,138 @@
+---
+import { getCollection, render } from 'astro:content';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import RouteHero from './RouteHero.astro';
+import StatsBlock from './StatsBlock.astro';
+import RouteMap from './RouteMap.astro';
+import ElevationProfile from './ElevationProfile.astro';
+import Segments from './Segments.astro';
+import Warnings from './Warnings.astro';
+import Recommendations from './Recommendations.astro';
+import Gallery from './Gallery.astro';
+import GpxCta from './GpxCta.astro';
+import RouteNav from './RouteNav.astro';
+import { loadGpx, buildElevationProfile } from '../lib/gpx';
+import { buildRouteJsonLd } from '../lib/seo';
+import { t, routePath, type Locale } from '../lib/i18n';
+
+interface Props {
+  locale: Locale;
+  entry: any;
+  prev?: any;
+  next?: any;
+}
+
+const { locale, entry, prev, next } = Astro.props;
+const otherLocale: Locale = locale === 'es' ? 'en' : 'es';
+const { Content } = await render(entry);
+const d = entry.data;
+
+const gpx = loadGpx(d.gpx_url);
+const profile = buildElevationProfile(gpx.points);
+
+const altEntries = await getCollection('rutas', (e: any) => e.id === `${otherLocale}/${entry.id.replace(/^[a-z]{2}\//, '')}`);
+const hasAlternate = altEntries.length > 0;
+
+const heroImage = d.gallery[0];
+const site = Astro.site ?? new URL('https://tu-dominio.example');
+
+const jsonLd = buildRouteJsonLd({
+  titulo: d.titulo,
+  descripcion_corta: d.descripcion_corta,
+  fecha: d.fecha,
+  slug: d.slug,
+  locale,
+  ogImage: heroImage?.src,
+  siteUrl: site.origin,
+});
+---
+
+<BaseLayout
+  title={d.titulo}
+  description={d.descripcion_corta}
+  locale={locale}
+  path={routePath(locale, d.slug)}
+  alternatePath={hasAlternate ? routePath(otherLocale, d.slug) : undefined}
+  ogImage={heroImage?.src}
+  jsonLd={jsonLd}
+  section="routes"
+  esPath={locale === 'es' ? routePath('es', d.slug) : hasAlternate ? routePath('es', d.slug) : '/rutas'}
+  enPath={locale === 'en' ? routePath('en', d.slug) : hasAlternate ? routePath('en', d.slug) : '/en/rutas'}
+>
+  <RouteHero
+    locale={locale}
+    titulo={d.titulo}
+    subtitulo={d.subtitulo}
+    tipo={d.tipo}
+    zona={d.zona}
+    ubicacion={d.ubicacion}
+    fecha={d.fecha}
+    heroImage={heroImage}
+  />
+
+  <StatsBlock
+    locale={locale}
+    distancia_km={gpx.distanceKm}
+    desnivel_m={gpx.elevationGainM}
+    altitud_max_m={gpx.maxEleM}
+    tiempo_estimado={d.tiempo_estimado}
+    dificultad={d.dificultad}
+    inicio={d.inicio}
+    fin={d.fin}
+  />
+
+  <section class="intro section">
+    <div class="wrap">
+      <div class="prose">
+        <Content />
+      </div>
+    </div>
+  </section>
+
+  <RouteMap id={d.slug} locale={locale} track={gpx.mapTrack} bounds={gpx.bounds} overrideCenter={d.mapa} />
+
+  <ElevationProfile
+    locale={locale}
+    linePath={profile.linePath}
+    areaPath={profile.areaPath}
+    minEleM={profile.minEleM}
+    maxEleM={profile.maxEleM}
+    width={profile.width}
+    height={profile.height}
+    nota={d.perfil_elevacion?.nota}
+  />
+
+  {d.highlights.length > 0 && (
+    <section class="highlights section">
+      <div class="wrap">
+        <p class="eyebrow">{t(locale, 'highlights_heading')}</p>
+        <ul class="prose highlights-list">
+          {d.highlights.map((h: string) => <li>{h}</li>)}
+        </ul>
+      </div>
+    </section>
+  )}
+
+  <Segments locale={locale} segmentos={d.segmentos} />
+  <Warnings locale={locale} advertencias={d.advertencias} />
+  <Recommendations
+    locale={locale}
+    recomendaciones={d.recomendaciones}
+    clima_ideal={d.clima_ideal}
+    equipo_sugerido={d.equipo_sugerido}
+    agua_comida={d.agua_comida}
+  />
+  <Gallery locale={locale} gallery={d.gallery} />
+  <GpxCta locale={locale} gpx_url={d.gpx_url} strava_url={d.strava_url} />
+  <RouteNav locale={locale} prev={prev?.data} next={next?.data} />
+</BaseLayout>
+
+<style>
+  .highlights-list {
+    margin: var(--sp-4) 0 0;
+    padding-left: 1.1em;
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-2);
+  }
+</style>

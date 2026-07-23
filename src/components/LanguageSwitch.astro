@@ -1,0 +1,39 @@
+---
+import type { Locale } from '../lib/i18n';
+
+interface Props {
+  locale: Locale;
+  esPath?: string;
+  enPath?: string;
+}
+
+const { locale, esPath, enPath } = Astro.props;
+---
+
+<div class="lang-switch">
+  <a href={esPath ?? '/'} aria-current={locale === 'es' ? 'page' : undefined}>ES</a>
+  <span aria-hidden="true">/</span>
+  <a href={enPath ?? '/en'} aria-current={locale === 'en' ? 'page' : undefined}>EN</a>
+</div>
+
+<style>
+  .lang-switch {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-1);
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    letter-spacing: 0.06em;
+  }
+  .lang-switch a {
+    text-decoration: none;
+    color: var(--text-muted);
+    padding: var(--sp-1);
+  }
+  .lang-switch a[aria-current='page'] {
+    color: var(--accent);
+  }
+  .lang-switch span {
+    color: var(--border);
+  }
+</style>

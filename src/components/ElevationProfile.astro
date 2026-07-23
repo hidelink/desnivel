@@ -1,0 +1,78 @@
+---
+import { t, type Locale } from '../lib/i18n';
+
+interface Props {
+  locale: Locale;
+  linePath: string;
+  areaPath: string;
+  minEleM: number;
+  maxEleM: number;
+  width: number;
+  height: number;
+  nota?: string;
+}
+
+const { locale, linePath, areaPath, minEleM, maxEleM, width, height, nota } = Astro.props;
+---
+
+<section class="elevation-block section">
+  <div class="wrap">
+    <p class="eyebrow">{t(locale, 'elevation_heading')}</p>
+    <div class="chart">
+      <svg viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="none" role="img" aria-label={t(locale, 'elevation_heading')}>
+        <defs>
+          <linearGradient id="eleFill" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="var(--accent-strong)" stop-opacity="0.35" />
+            <stop offset="100%" stop-color="var(--accent-strong)" stop-opacity="0" />
+          </linearGradient>
+        </defs>
+        <path d={areaPath} fill="url(#eleFill)" />
+        <path d={linePath} fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linejoin="round" />
+      </svg>
+      <div class="labels mono">
+        <span>{maxEleM} m</span>
+        <span>{minEleM} m</span>
+      </div>
+    </div>
+    {nota && <p class="nota prose">{nota}</p>}
+  </div>
+</section>
+
+<style>
+  .chart {
+    position: relative;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--surface);
+    padding: var(--sp-4);
+  }
+  svg {
+    width: 100%;
+    height: 200px;
+    display: block;
+  }
+  .labels {
+    position: absolute;
+    right: var(--sp-4);
+    top: var(--sp-4);
+    display: flex;
+    flex-direction: column;
+    gap: 130px;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    text-align: right;
+  }
+  .nota {
+    margin-top: var(--sp-4);
+    color: var(--text-muted);
+    font-size: 0.95rem;
+  }
+  @media (max-width: 640px) {
+    svg {
+      height: 150px;
+    }
+    .labels {
+      gap: 80px;
+    }
+  }
+</style>

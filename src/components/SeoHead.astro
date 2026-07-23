@@ -1,0 +1,44 @@
+---
+interface Props {
+  title: string;
+  description: string;
+  locale: 'es' | 'en';
+  path: string; // e.g. "/rutas/mi-ruta" (locale-inclusive, starts with /)
+  alternatePath?: string; // same page in the other locale, if it exists
+  ogImage?: string;
+  jsonLd?: Record<string, unknown>;
+}
+
+const { title, description, locale, path, alternatePath, ogImage, jsonLd } = Astro.props;
+
+const site = Astro.site ?? new URL('https://tu-dominio.example');
+const canonical = new URL(path, site).toString();
+const otherLocale = locale === 'es' ? 'en' : 'es';
+const alternateUrl = alternatePath ? new URL(alternatePath, site).toString() : undefined;
+const image = ogImage ? new URL(ogImage, site).toString() : undefined;
+---
+
+<title>{title} · Desnivel</title>
+<meta name="description" content={description} />
+<link rel="canonical" href={canonical} />
+<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+
+<meta property="og:type" content="article" />
+<meta property="og:title" content={title} />
+<meta property="og:description" content={description} />
+<meta property="og:url" content={canonical} />
+<meta property="og:locale" content={locale === 'es' ? 'es_MX' : 'en_US'} />
+{alternateUrl && <meta property="og:locale:alternate" content={otherLocale === 'es' ? 'es_MX' : 'en_US'} />}
+{image && <meta property="og:image" content={image} />}
+
+<meta name="twitter:card" content={image ? 'summary_large_image' : 'summary'} />
+<meta name="twitter:title" content={title} />
+<meta name="twitter:description" content={description} />
+{image && <meta name="twitter:image" content={image} />}
+
+{alternateUrl && <link rel="alternate" hreflang={otherLocale} href={alternateUrl} />}
+<link rel="alternate" hreflang={locale} href={canonical} />
+
+{jsonLd && (
+  <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
+)}

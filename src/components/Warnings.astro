@@ -1,0 +1,41 @@
+---
+import { t, type Locale } from '../lib/i18n';
+
+interface Props {
+  locale: Locale;
+  advertencias: string[];
+}
+
+const { locale, advertencias } = Astro.props;
+---
+
+{advertencias.length > 0 && (
+  <section class="warnings-block section">
+    <div class="wrap">
+      <div class="panel">
+        <p class="eyebrow">{t(locale, 'warnings_heading')}</p>
+        <ul class="prose">
+          {advertencias.map((item) => <li>{item}</li>)}
+        </ul>
+      </div>
+    </div>
+  </section>
+)}
+
+<style>
+  .panel {
+    border-left: 3px solid var(--danger);
+    padding-left: var(--sp-6);
+  }
+  .panel .eyebrow {
+    color: var(--danger);
+    margin-bottom: var(--sp-3);
+  }
+  ul {
+    margin: 0;
+    padding-left: 1.1em;
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-2);
+  }
+</style>

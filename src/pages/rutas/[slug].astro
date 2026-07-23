@@ -1,0 +1,17 @@
+---
+import { getCollection } from 'astro:content';
+import RouteDetailPage from '../../components/RouteDetailPage.astro';
+
+export async function getStaticPaths() {
+  const all = await getCollection('rutas', (entry) => entry.id.startsWith('es/') && !entry.data.draft);
+  const sorted = [...all].sort((a, b) => b.data.fecha.getTime() - a.data.fecha.getTime());
+  return sorted.map((entry, i) => ({
+    params: { slug: entry.data.slug },
+    props: { entry, prev: sorted[i - 1], next: sorted[i + 1] },
+  }));
+}
+
+const { entry, prev, next } = Astro.props;
+---
+
+<RouteDetailPage locale="es" entry={entry} prev={prev} next={next} />
