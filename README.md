@@ -60,7 +60,9 @@ public/
 _legacy-trail-analyzer/   # prototipo anterior del sitio, archivado (no se usa)
 ```
 
-Para agregar una ruta nueva, ver **[HOW_TO_ADD_ROUTE.md](HOW_TO_ADD_ROUTE.md)**.
+Para agregar una ruta nueva editando archivos a mano, ver **[HOW_TO_ADD_ROUTE.md](HOW_TO_ADD_ROUTE.md)**.
+Si prefieres un panel visual (sin tocar Markdown), el sitio incluye uno en `/admin`
+(Sveltia CMS) — ver **[ADMIN_SETUP.md](ADMIN_SETUP.md)**.
 
 ## Desarrollo local
 

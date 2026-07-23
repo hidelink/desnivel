@@ -1,0 +1,116 @@
+backend:
+  name: github
+  repo: hidelink/desnivel
+  branch: main
+
+# Auth goes through Netlify's built-in OAuth provider for Git-based CMSs
+# (Site settings → Build & deploy → OAuth, no Identity/Git Gateway needed).
+# See ADMIN_SETUP.md for the one-time Netlify configuration steps.
+
+media_folder: "public/photos"
+public_folder: "/photos"
+
+i18n:
+  structure: multiple_folders
+  locales: [es, en]
+  default_locale: es
+
+collections:
+  - name: "rutas"
+    label: "Rutas"
+    label_singular: "Ruta"
+    folder: "src/content/rutas"
+    create: true
+    delete: true
+    slug: "{{fields.slug}}"
+    extension: "md"
+    format: "frontmatter"
+    i18n: true
+    summary: "{{titulo}} — {{zona}}"
+    sortable_fields: ["fecha", "titulo", "zona"]
+    fields:
+      - { label: "Slug (nombre del archivo, sin espacios)", name: "slug", widget: "string", i18n: duplicate, hint: "ej. mi-ruta-nueva — debe ser igual en ambos idiomas" }
+      - { label: "Título", name: "titulo", widget: "string", i18n: true }
+      - { label: "Subtítulo", name: "subtitulo", widget: "string", i18n: true }
+      - label: "Tipo"
+        name: "tipo"
+        widget: "select"
+        i18n: duplicate
+        options: ["trail running", "hiking", "travesía"]
+      - { label: "Zona", name: "zona", widget: "string", i18n: duplicate }
+      - { label: "Ubicación (punto de acceso)", name: "ubicacion", widget: "string", i18n: duplicate }
+      - { label: "Fecha", name: "fecha", widget: "datetime", i18n: duplicate, date_format: "YYYY-MM-DD", time_format: false }
+
+      - { label: "Distancia (km) — referencia, el sitio calcula el real del GPX", name: "distancia_km", widget: "number", i18n: duplicate, value_type: "float" }
+      - { label: "Desnivel + (m) — referencia", name: "desnivel_m", widget: "number", i18n: duplicate, value_type: "float" }
+      - { label: "Altitud máxima (m) — referencia", name: "altitud_max_m", widget: "number", i18n: duplicate, value_type: "float" }
+      - { label: "Tiempo estimado", name: "tiempo_estimado", widget: "string", i18n: duplicate, hint: "ej. 5-7 h" }
+      - label: "Dificultad"
+        name: "dificultad"
+        widget: "select"
+        i18n: duplicate
+        options: ["baja", "media", "alta", "muy alta"]
+
+      - { label: "Punto de inicio", name: "inicio", widget: "string", i18n: duplicate }
+      - { label: "Punto final", name: "fin", widget: "string", i18n: duplicate }
+      - { label: "Descripción corta (para SEO y tarjetas)", name: "descripcion_corta", widget: "text", i18n: true }
+
+      - label: "Segmentos del recorrido"
+        name: "segmentos"
+        widget: "list"
+        i18n: true
+        fields:
+          - { label: "Título del tramo", name: "title", widget: "string" }
+          - { label: "Label (ej. Km 0 - 5)", name: "label", widget: "string" }
+          - { label: "Descripción", name: "copy", widget: "text" }
+
+      - { label: "Recomendaciones", name: "recomendaciones", widget: "list", i18n: true, field: { label: "Recomendación", name: "item", widget: "string" } }
+      - { label: "Advertencias", name: "advertencias", widget: "list", i18n: true, field: { label: "Advertencia", name: "item", widget: "string" } }
+
+      - { label: "Clima ideal", name: "clima_ideal", widget: "text", i18n: true }
+      - { label: "Equipo sugerido", name: "equipo_sugerido", widget: "list", i18n: true, field: { label: "Objeto", name: "item", widget: "string" } }
+      - { label: "Agua y comida", name: "agua_comida", widget: "text", i18n: true }
+
+      - label: "Archivo GPX"
+        name: "gpx_url"
+        widget: "file"
+        i18n: duplicate
+        media_folder: "/public/gpx"
+        public_folder: "/gpx"
+      - { label: "Link de Strava (opcional)", name: "strava_url", widget: "string", i18n: duplicate, required: false }
+      - { label: "Link de Instagram (opcional)", name: "instagram_url", widget: "string", i18n: duplicate, required: false }
+
+      - label: "Galería de fotos"
+        name: "gallery"
+        widget: "list"
+        i18n: duplicate
+        fields:
+          - { label: "Foto", name: "src", widget: "image" }
+          - { label: "Texto alternativo", name: "alt", widget: "string" }
+          - { label: "Pie de foto / crédito (opcional)", name: "caption", widget: "string", required: false }
+
+      - label: "Mapa (ajuste opcional)"
+        name: "mapa"
+        widget: "object"
+        i18n: duplicate
+        required: false
+        collapsed: true
+        fields:
+          - { label: "Latitud inicial", name: "lat", widget: "number", required: false, value_type: "float" }
+          - { label: "Longitud inicial", name: "lon", widget: "number", required: false, value_type: "float" }
+          - { label: "Zoom inicial", name: "zoom", widget: "number", required: false, value_type: "int" }
+
+      - label: "Perfil de elevación (nota editorial opcional)"
+        name: "perfil_elevacion"
+        widget: "object"
+        i18n: true
+        required: false
+        collapsed: true
+        fields:
+          - { label: "Nota", name: "nota", widget: "string", required: false }
+
+      - { label: "Lo más destacado", name: "highlights", widget: "list", i18n: true, field: { label: "Destacado", name: "item", widget: "string" } }
+
+      - { label: "Borrador (no publicar todavía)", name: "draft", widget: "boolean", i18n: duplicate, default: false }
+
+      - { label: "Crónica (texto principal de la ruta)", name: "body", widget: "markdown", i18n: true }

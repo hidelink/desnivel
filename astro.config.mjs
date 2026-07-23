@@ -1,9 +1,7 @@
 import { defineConfig } from 'astro/config';
 import sitemap from '@astrojs/sitemap';
 
-// IMPORTANT: replace with your real production domain once you have one —
-// required for correct sitemap.xml / canonical / Open Graph URLs.
-const SITE_URL = 'https://tu-dominio.example';
+const SITE_URL = 'https://desnivel.run';
 
 export default defineConfig({
   site: SITE_URL,
