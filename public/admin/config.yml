@@ -1,11 +1,9 @@
 backend:
-  name: github
-  repo: hidelink/desnivel
+  name: git-gateway
   branch: main
 
-# Auth goes through Netlify's built-in OAuth provider for Git-based CMSs
-# (Site settings → Build & deploy → OAuth, no Identity/Git Gateway needed).
-# See ADMIN_SETUP.md for the one-time Netlify configuration steps.
+# Auth goes through Netlify Identity + Git Gateway (already enabled in the
+# Netlify dashboard for this site). See ADMIN_SETUP.md for details.
 
 media_folder: "public/photos"
 public_folder: "/photos"
@@ -80,19 +78,19 @@ collections:
       - { label: "Link de Strava (opcional)", name: "strava_url", widget: "string", i18n: duplicate, required: false }
       - { label: "Link de Instagram (opcional)", name: "instagram_url", widget: "string", i18n: duplicate, required: false }
 
-      - label: "Galería de fotos"
+      - label: "Galería de fotos (repite las mismas fotos en ambos idiomas)"
         name: "gallery"
         widget: "list"
-        i18n: duplicate
+        i18n: true
         fields:
           - { label: "Foto", name: "src", widget: "image" }
           - { label: "Texto alternativo", name: "alt", widget: "string" }
           - { label: "Pie de foto / crédito (opcional)", name: "caption", widget: "string", required: false }
 
-      - label: "Mapa (ajuste opcional)"
+      - label: "Mapa (ajuste opcional, mismo valor en ambos idiomas)"
         name: "mapa"
         widget: "object"
-        i18n: duplicate
+        i18n: true
         required: false
         collapsed: true
         fields:
