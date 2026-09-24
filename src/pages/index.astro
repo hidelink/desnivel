@@ -101,32 +101,7 @@ header{
 }
 #file-input{display:none;}
 
-/* ── SAVED ROUTES (local, IndexedDB) ───────────────────────── */
-.saved-routes-block{margin:0 28px 20px;}
-.saved-routes-title{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px;}
-.saved-routes-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px;}
-.saved-route-card{
-  position:relative;background:var(--s2);border:1px solid var(--border);border-radius:11px;
-  padding:14px 30px 14px 16px;cursor:pointer;transition:border-color .2s;
-}
-.saved-route-card:hover{border-color:var(--border2);}
-.sr-name{font-size:13.5px;font-weight:700;margin-bottom:4px;}
-.sr-meta{font-size:11.5px;color:var(--muted);margin-bottom:4px;}
-.sr-date{font-size:10.5px;color:var(--muted2);}
-.sr-delete{
-  position:absolute;top:10px;right:10px;background:none;border:none;color:var(--muted);
-  cursor:pointer;font-size:13px;padding:3px 6px;border-radius:4px;line-height:1;
-}
-.sr-delete:hover{color:#fff;background:rgba(255,255,255,.08);}
-
-.import-plan-row{margin:0 28px 24px;text-align:center;}
-.import-plan-btn{
-  background:none;border:1px dashed var(--border2);color:var(--muted);
-  font-size:12px;padding:8px 16px;border-radius:8px;cursor:pointer;transition:all .2s;
-}
-.import-plan-btn:hover{color:var(--text);border-color:var(--muted2);}
-
-/* Guardar / Exportar buttons on a loaded route */
+/* Descargar GPX / Compartir buttons on a loaded route */
 .route-actions{display:flex;gap:8px;margin-top:10px;}
 .route-action-btn{
   background:var(--s1);border:1px solid var(--border2);color:var(--text);
@@ -535,7 +510,6 @@ footer{
   header{padding:12px 16px;}
   .ig-badge{display:none;}
   #drop-zone,#main{padding-left:16px;padding-right:16px;}
-  .saved-routes-block,.import-plan-row{margin-left:16px;margin-right:16px;}
   #map{height:360px;}
   .stats-grid{grid-template-columns:repeat(2,1fr);}
   .route-card{flex-direction:column;align-items:flex-start;}
@@ -615,18 +589,6 @@ footer{
   </div>
 </div>
 
-<!-- SAVED ROUTES (guardadas en este navegador) -->
-<div id="saved-routes-block" class="saved-routes-block" style="display:none">
-  <div class="saved-routes-title">Mis rutas guardadas</div>
-  <div id="saved-routes-list" class="saved-routes-list"></div>
-</div>
-
-<!-- IMPORT A SAVED PLAN (.json) -->
-<div class="import-plan-row">
-  <button type="button" class="import-plan-btn" onclick="document.getElementById('plan-input').click()">📂 Abrir plan guardado (.json)</button>
-  <input type="file" id="plan-input" accept="application/json,.json" style="display:none">
-</div>
-
 <!-- MAIN CONTENT -->
 <div id="main">
 
@@ -640,8 +602,7 @@ footer{
         <span class="rbadge diff-badge" id="diff-badge">—</span>
       </div>
       <div class="route-actions">
-        <button type="button" class="route-action-btn" id="save-route-btn" onclick="saveCurrentRoute()">💾 Guardar</button>
-        <button type="button" class="route-action-btn" onclick="exportCurrentRoute()">⬇ Exportar</button>
+        <button type="button" class="route-action-btn" id="download-gpx-btn" onclick="downloadGpx()">⬇ Descargar GPX</button>
         <button type="button" class="route-action-btn" id="share-route-btn" onclick="shareCurrentRoute()">🔗 Compartir</button>
       </div>
       <div id="share-result" class="share-result">
@@ -922,7 +883,7 @@ footer{
 // ── STATE ──────────────────────────────────────────────────
 let gpxPoints = [], cumDistKm = [];
 let checkpoints = []; // { km, label, cutoffSec|null }
-let currentGpxText = null, currentFilename = null, currentSavedRouteId = null;
+let currentGpxText = null, currentFilename = null;
 let map = null, elevChart = null;
 let hoverMarker = null, gradeLines = [];
 
@@ -1005,7 +966,6 @@ function processGPX(xml, filename) {
 
   currentGpxText = xml;
   currentFilename = filename;
-  currentSavedRouteId = null; // linked back to a saved record only via applyRoutePlan()
 
   gpxPoints = smooth(pts);
 
@@ -1088,71 +1048,39 @@ function processGPX(xml, filename) {
   checkpoints = [];
   renderCheckpointList();
   document.getElementById('strategy-result').style.display = 'none';
-  document.getElementById('save-route-btn').textContent = '💾 Guardar';
   document.getElementById('share-result').classList.remove('show');
 }
 
-// ── SAVED ROUTES (local, IndexedDB) + export/import ──────────
-// Everything here stays on this device/browser — no account, no server.
-const SR_DB_NAME='desnivel', SR_DB_VERSION=1, SR_STORE='routes';
-
-function srOpenDB(){
-  return new Promise((resolve, reject)=>{
-    const req = indexedDB.open(SR_DB_NAME, SR_DB_VERSION);
-    req.onupgradeneeded = () => {
-      if (!req.result.objectStoreNames.contains(SR_STORE)) {
-        req.result.createObjectStore(SR_STORE, { keyPath:'id' });
-      }
-    };
-    req.onsuccess = () => resolve(req.result);
-    req.onerror = () => reject(req.error);
-  });
-}
-async function srSaveRoute(route){
-  const db = await srOpenDB();
-  return new Promise((resolve, reject)=>{
-    const tx = db.transaction(SR_STORE,'readwrite');
-    tx.objectStore(SR_STORE).put(route);
-    tx.oncomplete = () => resolve();
-    tx.onerror = () => reject(tx.error);
-  });
-}
-async function srGetAllRoutes(){
-  const db = await srOpenDB();
-  return new Promise((resolve, reject)=>{
-    const tx = db.transaction(SR_STORE,'readonly');
-    const req = tx.objectStore(SR_STORE).getAll();
-    req.onsuccess = () => resolve(req.result || []);
-    req.onerror = () => reject(req.error);
-  });
-}
-async function srDeleteRoute(id){
-  const db = await srOpenDB();
-  return new Promise((resolve, reject)=>{
-    const tx = db.transaction(SR_STORE,'readwrite');
-    tx.objectStore(SR_STORE).delete(id);
-    tx.oncomplete = () => resolve();
-    tx.onerror = () => reject(tx.error);
-  });
+// ── DOWNLOAD GPX ───────────────────────────────────────────
+function downloadGpx(){
+  if (!gpxPoints.length || !currentGpxText) { alert('Carga una ruta primero.'); return; }
+  const btn = document.getElementById('download-gpx-btn');
+  const orig = btn.textContent;
+  const blob = new Blob([currentGpxText], { type:'application/gpx+xml' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  const name = (currentFilename || document.getElementById('route-name-text').textContent || 'ruta').trim().replace(/\.gpx$/i,'');
+  a.download = name.replace(/[^\w\-]+/g,'_').replace(/^_+|_+$/g,'') + '.gpx';
+  document.body.appendChild(a); a.click(); a.remove();
+  URL.revokeObjectURL(url);
+  btn.textContent = '✓ Descargado';
+  setTimeout(()=>{ btn.textContent = orig; }, 1500);
 }
 
-// The same plan object is used for both IndexedDB records and exported
-// .json files — one shape, two destinations.
-// includePlan=false strips checkpoints/target time — used when sharing a
-// link, so whoever opens it gets a blank calculator for the route rather
-// than the sharer's own personal pacing plan.
-function buildRoutePlan(includePlan = true){
+// Builds the plan object posted to the share backend — always without the
+// sharer's own checkpoints/target time, so whoever opens the link gets a
+// blank calculator for the route rather than the sharer's personal plan.
+function buildRoutePlan(){
   return {
-    id: currentSavedRouteId || (Date.now().toString(36) + Math.random().toString(36).slice(2,8)),
     type: 'desnivel-route-plan',
     version: 1,
-    savedAt: new Date().toISOString(),
     name: (document.getElementById('route-name-text').textContent || 'Mi ruta').trim(),
     filename: currentFilename || 'ruta.gpx',
     gpx: currentGpxText,
-    checkpoints: includePlan ? checkpoints.map(c=>({...c})) : [],
-    targetHours: includePlan ? (parseInt(document.getElementById('inp-hours').value) || 0) : 0,
-    targetMinutes: includePlan ? (parseInt(document.getElementById('inp-mins').value) || 0) : 0,
+    checkpoints: [],
+    targetHours: 0,
+    targetMinutes: 0,
     splitBy: document.getElementById('split-by').value,
     summary: {
       dist: document.getElementById('stat-dist').textContent,
@@ -1164,41 +1092,16 @@ function buildRoutePlan(includePlan = true){
   };
 }
 
-async function saveCurrentRoute(){
-  if (!gpxPoints.length || !currentGpxText) { alert('Carga una ruta primero.'); return; }
-  const plan = buildRoutePlan();
-  try {
-    await srSaveRoute(plan);
-    currentSavedRouteId = plan.id;
-    await renderSavedRoutesList();
-    const btn = document.getElementById('save-route-btn');
-    const orig = btn.textContent;
-    btn.textContent = '✓ Guardada';
-    setTimeout(()=>{ btn.textContent = orig; }, 1500);
-  } catch (err) {
-    alert('No se pudo guardar la ruta en este navegador: ' + err.message);
-  }
-}
-
-function exportCurrentRoute(){
-  if (!gpxPoints.length || !currentGpxText) { alert('Carga una ruta primero.'); return; }
-  const plan = buildRoutePlan();
-  const blob = new Blob([JSON.stringify(plan)], { type:'application/json' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = (plan.name || 'ruta').replace(/[^\w\-]+/g,'_') + '.desnivel.json';
-  document.body.appendChild(a); a.click(); a.remove();
-  URL.revokeObjectURL(url);
-}
-
+// Reconstructs a route (map, stats, calculator) from a plan fetched via a
+// share link. Checkpoints/target time only auto-restore if the plan
+// actually has them (kept for robustness — current share links never
+// include them, but nothing else should assume that forever).
 function applyRoutePlan(plan){
   if (!plan || plan.type !== 'desnivel-route-plan' || !plan.gpx) {
-    alert('Ese archivo no es un plan de Desnivel válido.');
+    alert('Ese link no es una ruta de Desnivel válida.');
     return;
   }
   processGPX(plan.gpx, plan.name || plan.filename || 'Mi ruta');
-  currentSavedRouteId = plan.id || null;
   checkpoints = Array.isArray(plan.checkpoints) ? plan.checkpoints.map(c=>({...c})) : [];
   renderCheckpointList();
   if (plan.targetHours != null) document.getElementById('inp-hours').value = plan.targetHours;
@@ -1206,54 +1109,6 @@ function applyRoutePlan(plan){
   if (plan.splitBy) document.getElementById('split-by').value = plan.splitBy;
   if ((plan.targetHours||0) > 0 || (plan.targetMinutes||0) > 0) calcStrategy();
 }
-
-async function loadSavedRoute(id){
-  const routes = await srGetAllRoutes();
-  const route = routes.find(r=>r.id===id);
-  if (!route) { alert('No se encontró esa ruta guardada.'); return; }
-  applyRoutePlan(route);
-}
-
-async function deleteSavedRoute(id){
-  if (!confirm('¿Eliminar esta ruta guardada? No se puede deshacer.')) return;
-  await srDeleteRoute(id);
-  await renderSavedRoutesList();
-}
-
-async function renderSavedRoutesList(){
-  const block = document.getElementById('saved-routes-block');
-  const list = document.getElementById('saved-routes-list');
-  if (!block || !list) return;
-  let routes = [];
-  try { routes = await srGetAllRoutes(); } catch(e) { console.error('IndexedDB error', e); }
-  routes.sort((a,b)=> new Date(b.savedAt) - new Date(a.savedAt));
-  if (!routes.length) { block.style.display='none'; return; }
-  block.style.display='block';
-  list.innerHTML = routes.map(r=>`
-    <div class="saved-route-card" onclick="loadSavedRoute('${r.id}')">
-      <div class="sr-name">${escapeHtml(r.name || r.filename || 'Ruta')}</div>
-      <div class="sr-meta">${[
-        r.summary?.dist ? `${r.summary.dist} km` : '',
-        r.summary?.gain ? `↑${r.summary.gain}m` : '',
-        r.summary?.diffLabel || ''
-      ].filter(Boolean).join(' · ')}</div>
-      <div class="sr-date">${new Date(r.savedAt).toLocaleDateString('es-MX',{day:'numeric',month:'short',year:'numeric'})}</div>
-      <button type="button" class="sr-delete" onclick="event.stopPropagation(); deleteSavedRoute('${r.id}')" aria-label="Eliminar ruta guardada">✕</button>
-    </div>
-  `).join('');
-}
-
-document.getElementById('plan-input').addEventListener('change', function(){
-  const file = this.files[0];
-  if (!file) return;
-  const r = new FileReader();
-  r.onload = e => {
-    try { applyRoutePlan(JSON.parse(e.target.result)); }
-    catch(err) { alert('No se pudo leer el archivo: ' + err.message); }
-  };
-  r.readAsText(file);
-  this.value = '';
-});
 
 // ── SHARE VIA URL (Netlify Function + Blobs) ──────────────────
 // Uploads the current plan to a small serverless store and returns a short
@@ -1310,7 +1165,7 @@ async function shareCurrentRoute(){
   const orig = btn.textContent;
   btn.textContent = 'Subiendo…'; btn.disabled = true;
   try {
-    const plan = buildRoutePlan(false);
+    const plan = buildRoutePlan();
     const gzipBase64 = await gzipToBase64(plan);
     const res = await fetch('/api/save-route', {
       method:'POST',
@@ -1349,8 +1204,6 @@ async function shareCurrentRoute(){
     alert(err.message);
   }
 })();
-
-renderSavedRoutesList();
 
 // ── ANIMATED COUNTER ───────────────────────────────────────
 function animateCount(id, from, to, decimals, sep) {
