@@ -12,13 +12,29 @@ export default async (req) => {
     return json({ error: 'Method not allowed' }, 405);
   }
 
+  let payload;
+  try {
+    payload = await req.json();
+  } catch {
+    return json({ error: 'JSON inválido' }, 400);
+  }
+
+  // The gzipped plan travels as base64 inside plain JSON — sending it as a
+  // raw binary request body got corrupted somewhere in Netlify's Lambda-
+  // compatible request handling before the function ever saw it. Base64
+  // text has no binary/text ambiguity left for anything upstream to get
+  // wrong.
   let bodyText;
   try {
-    bodyText = req.headers.get('x-plan-encoding') === 'gzip'
-      ? await new Response(
-          new Blob([await req.arrayBuffer()]).stream().pipeThrough(new DecompressionStream('gzip'))
-        ).text()
-      : await req.text();
+    if (typeof payload?.gzipBase64 === 'string') {
+      const compressed = Buffer.from(payload.gzipBase64, 'base64');
+      bodyText = await new Response(
+        new Blob([compressed]).stream().pipeThrough(new DecompressionStream('gzip'))
+      ).text();
+    } else {
+      // Back-compat: a plan posted directly, uncompressed.
+      bodyText = JSON.stringify(payload);
+    }
   } catch {
     return json({ error: 'No se pudo leer el cuerpo de la petición' }, 400);
   }

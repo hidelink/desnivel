@@ -1283,10 +1283,25 @@ function copyShareUrl(btn){
 // connection. A dense 1Hz GPX export (Strava/Garmin) can easily be 6-7MB+
 // on its own, so we gzip the plan client-side first; GPX/JSON text
 // compresses very well (often 8-15x), comfortably clearing that limit.
-async function gzipJSON(obj){
+//
+// The compressed bytes travel as base64 inside an ordinary JSON body
+// rather than as a raw binary request body — sending raw binary tripped
+// something in Netlify's Lambda-compatible request handling that
+// corrupted it in transit (probably a content-type-driven text/binary
+// decision upstream of our function). Base64-in-JSON is plain text
+// end to end, so there's nothing left to mis-encode; the ~33% overhead
+// is irrelevant next to the ~10-20x gzip saves it rides on top of.
+async function gzipToBase64(obj){
   const json = JSON.stringify(obj);
   const stream = new Blob([json]).stream().pipeThrough(new CompressionStream('gzip'));
-  return await new Response(stream).blob();
+  const buf = await new Response(stream).arrayBuffer();
+  const bytes = new Uint8Array(buf);
+  let binary = '';
+  const chunk = 0x8000;
+  for (let i = 0; i < bytes.length; i += chunk) {
+    binary += String.fromCharCode(...bytes.subarray(i, i + chunk));
+  }
+  return btoa(binary);
 }
 
 async function shareCurrentRoute(){
@@ -1296,11 +1311,11 @@ async function shareCurrentRoute(){
   btn.textContent = 'Subiendo…'; btn.disabled = true;
   try {
     const plan = buildRoutePlan(false);
-    const body = await gzipJSON(plan);
+    const gzipBase64 = await gzipToBase64(plan);
     const res = await fetch('/api/save-route', {
       method:'POST',
-      headers:{'content-type':'application/json', 'x-plan-encoding':'gzip'},
-      body
+      headers:{'content-type':'application/json'},
+      body: JSON.stringify({ gzipBase64 })
     });
     const data = await res.json().catch(()=>({}));
     if (!res.ok) throw new Error(data.error || ('Error ' + res.status));
