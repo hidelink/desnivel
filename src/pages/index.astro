@@ -1275,6 +1275,17 @@ function copyShareUrl(btn){
     setTimeout(()=>{ btn.textContent = orig; }, 1500);
   });
 }
+// Netlify Functions reject request bodies over ~6MB at the infrastructure
+// level (before our code ever runs) — with no clean error, just a failed
+// connection. A dense 1Hz GPX export (Strava/Garmin) can easily be 6-7MB+
+// on its own, so we gzip the plan client-side first; GPX/JSON text
+// compresses very well (often 8-15x), comfortably clearing that limit.
+async function gzipJSON(obj){
+  const json = JSON.stringify(obj);
+  const stream = new Blob([json]).stream().pipeThrough(new CompressionStream('gzip'));
+  return await new Response(stream).blob();
+}
+
 async function shareCurrentRoute(){
   if (!gpxPoints.length || !currentGpxText) { alert('Carga una ruta primero.'); return; }
   const btn = document.getElementById('share-route-btn');
@@ -1282,8 +1293,11 @@ async function shareCurrentRoute(){
   btn.textContent = 'Subiendo…'; btn.disabled = true;
   try {
     const plan = buildRoutePlan();
+    const body = await gzipJSON(plan);
     const res = await fetch('/api/save-route', {
-      method:'POST', headers:{'content-type':'application/json'}, body: JSON.stringify(plan)
+      method:'POST',
+      headers:{'content-type':'application/json', 'x-plan-encoding':'gzip'},
+      body
     });
     const data = await res.json().catch(()=>({}));
     if (!res.ok) throw new Error(data.error || ('Error ' + res.status));
@@ -1292,7 +1306,10 @@ async function shareCurrentRoute(){
     showShareResult(url);
     btn.textContent = copied ? '✓ Link copiado' : '✓ Link listo';
   } catch (err) {
-    alert('No se pudo generar el link para compartir: ' + err.message);
+    const msg = err.name === 'TypeError'
+      ? 'No se pudo conectar con el servidor. Revisa tu conexión e intenta de nuevo.'
+      : err.message;
+    alert('No se pudo generar el link para compartir: ' + msg);
     btn.textContent = orig;
   } finally {
     btn.disabled = false;

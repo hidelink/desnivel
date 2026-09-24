@@ -12,9 +12,20 @@ export default async (req) => {
     return json({ error: 'Method not allowed' }, 405);
   }
 
+  let bodyText;
+  try {
+    bodyText = req.headers.get('x-plan-encoding') === 'gzip'
+      ? await new Response(
+          new Blob([await req.arrayBuffer()]).stream().pipeThrough(new DecompressionStream('gzip'))
+        ).text()
+      : await req.text();
+  } catch {
+    return json({ error: 'No se pudo leer el cuerpo de la petición' }, 400);
+  }
+
   let plan;
   try {
-    plan = await req.json();
+    plan = JSON.parse(bodyText);
   } catch {
     return json({ error: 'JSON inválido' }, 400);
   }
