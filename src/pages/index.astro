@@ -1138,7 +1138,10 @@ async function srDeleteRoute(id){
 
 // The same plan object is used for both IndexedDB records and exported
 // .json files — one shape, two destinations.
-function buildRoutePlan(){
+// includePlan=false strips checkpoints/target time — used when sharing a
+// link, so whoever opens it gets a blank calculator for the route rather
+// than the sharer's own personal pacing plan.
+function buildRoutePlan(includePlan = true){
   return {
     id: currentSavedRouteId || (Date.now().toString(36) + Math.random().toString(36).slice(2,8)),
     type: 'desnivel-route-plan',
@@ -1147,9 +1150,9 @@ function buildRoutePlan(){
     name: (document.getElementById('route-name-text').textContent || 'Mi ruta').trim(),
     filename: currentFilename || 'ruta.gpx',
     gpx: currentGpxText,
-    checkpoints: checkpoints.map(c=>({...c})),
-    targetHours: parseInt(document.getElementById('inp-hours').value) || 0,
-    targetMinutes: parseInt(document.getElementById('inp-mins').value) || 0,
+    checkpoints: includePlan ? checkpoints.map(c=>({...c})) : [],
+    targetHours: includePlan ? (parseInt(document.getElementById('inp-hours').value) || 0) : 0,
+    targetMinutes: includePlan ? (parseInt(document.getElementById('inp-mins').value) || 0) : 0,
     splitBy: document.getElementById('split-by').value,
     summary: {
       dist: document.getElementById('stat-dist').textContent,
@@ -1292,7 +1295,7 @@ async function shareCurrentRoute(){
   const orig = btn.textContent;
   btn.textContent = 'Subiendo…'; btn.disabled = true;
   try {
-    const plan = buildRoutePlan();
+    const plan = buildRoutePlan(false);
     const body = await gzipJSON(plan);
     const res = await fetch('/api/save-route', {
       method:'POST',
