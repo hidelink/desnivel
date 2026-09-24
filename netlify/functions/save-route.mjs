@@ -55,12 +55,28 @@ export default async (req) => {
     return json({ error: 'La ruta es demasiado grande para compartir (máx 15MB).' }, 413);
   }
 
-  const id = randomUUID().replace(/-/g, '').slice(0, 12);
+  const slug = slugify(plan.name) || 'ruta';
+  const suffix = randomUUID().replace(/-/g, '').slice(0, 6);
+  const id = `${slug}-${suffix}`;
   const store = getStore('shared-routes');
   await store.set(id, body, { metadata: { savedAt: new Date().toISOString() } });
 
   return json({ id });
 };
+
+// Route name -> URL-safe slug: lowercase, no accents, words joined by
+// hyphens. The random suffix appended by the caller is what actually
+// guarantees uniqueness — this just makes the link readable at a glance
+// (…/?r=gornergrat-4f8a2c instead of …/?r=5cda6a075006).
+function slugify(text) {
+  return String(text || '')
+    .normalize('NFD').replace(/[̀-ͯ]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 40)
+    .replace(/-+$/, '');
+}
 
 function json(data, status = 200) {
   return new Response(JSON.stringify(data), {
