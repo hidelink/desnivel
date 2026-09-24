@@ -20,7 +20,6 @@
     "leaflet": "^1.9.4"
   },
   "devDependencies": {
-    "@types/leaflet": "^1.9.12",
-    "netlify-cli": "^26.2.0"
+    "@types/leaflet": "^1.9.12"
   }
 }
