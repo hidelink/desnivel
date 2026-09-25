@@ -1351,7 +1351,18 @@ function renderChart() {
       },
       scales:{
         x:{
-          ticks:{color:'#8a8474',maxTicksLimit:10,callback:v=>v+' km'},
+          ticks:{
+            color:'#8a8474',maxTicksLimit:10,
+            // The x-axis is a category scale (labels are km-distance
+            // strings, one per downsampled point) — the value Chart.js
+            // hands the callback is the point's INDEX into that array,
+            // not the km value itself. Using it directly (the previous
+            // code) rendered the index as if it were km, e.g. showing
+            // "648 km" on a route that's actually 23km long, once there
+            // were that many downsampled points. getLabelForValue resolves
+            // the index back to the real km label.
+            callback:function(v){ return this.getLabelForValue(v)+' km'; }
+          },
           grid:{color:'rgba(0,0,0,.06)'},border:{color:'transparent'}
         },
         y:{
