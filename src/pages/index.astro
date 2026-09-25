@@ -27,22 +27,22 @@
 <script is:inline src="https://cdnjs.cloudflare.com/ajax/libs/exif-js/2.3.0/exif.min.js"></script>
 <style is:global>
 :root {
-  --bg:      #0b0b0b;
-  --s1:      #161616;
-  --s2:      #1e1e1e;
-  --s3:      #262626;
-  --border:  #2a2a2a;
-  --border2: #333;
+  --bg:      #f4f2ee;
+  --s1:      #ffffff;
+  --s2:      #ffffff;
+  --s3:      #ece8e0;
+  --border:  #e1ddd2;
+  --border2: #cfc9ba;
   --orange:  #e8650a;
   --orange2: #ff7c2a;
-  --text:    #efefef;
-  --muted:   #777;
-  --muted2:  #555;
-  --up1:     #ff6b35;
+  --text:    #1a1a1a;
+  --muted:   #6b6558;
+  --muted2:  #9a9384;
+  --up1:     #d9480f;
   --up2:     #c0392b;
-  --flat:    #52c774;
-  --down1:   #4fc3f7;
-  --down2:   #1976d2;
+  --flat:    #2f9e44;
+  --down1:   #0284c7;
+  --down2:   #0d47a1;
   --r: 12px;
 }
 *{margin:0;padding:0;box-sizing:border-box;}
@@ -176,12 +176,12 @@ header{
    (the same pattern the lightbox already uses reliably) sidesteps it. */
 .info-tip{
   position:absolute;top:14px;right:14px;width:18px;height:18px;padding:0;
-  border-radius:50%;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.16);
+  border-radius:50%;background:rgba(0,0,0,.05);border:1px solid rgba(0,0,0,.12);
   color:var(--muted);font-size:11px;font-weight:700;font-family:inherit;line-height:1;
   display:flex;align-items:center;justify-content:center;cursor:help;
 }
 .info-tip:hover,.info-tip:focus-visible,.info-tip.open{
-  background:rgba(255,255,255,.18);color:#fff;outline:none;
+  background:var(--orange);border-color:var(--orange);color:#fff;outline:none;
 }
 /* Variant for placing the icon inline next to a label instead of pinned
    to a stat-card's corner (e.g. the difficulty score header). */
@@ -220,8 +220,11 @@ header{
   background:rgba(11,11,11,.88);border:1px solid var(--border2);
   border-radius:10px;padding:12px 14px;backdrop-filter:blur(8px);
 }
-.leg-title{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px;}
-.leg-row{display:flex;align-items:center;gap:8px;margin-bottom:5px;font-size:11px;color:var(--text);}
+/* .map-legend is always a dark chip floating over the map, independent
+   of the page theme, so its text is hardcoded light rather than following
+   --muted/--text (which are now dark in light mode). */
+.leg-title{font-size:10px;color:#999;text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px;}
+.leg-row{display:flex;align-items:center;gap:8px;margin-bottom:5px;font-size:11px;color:#efefef;}
 .leg-line{width:22px;height:3px;border-radius:2px;flex-shrink:0;}
 .hover-dot{width:12px;height:12px;background:#fff;border:3px solid var(--orange);border-radius:50%;box-shadow:0 0 8px rgba(232,101,10,.8);}
 
@@ -302,7 +305,7 @@ select.sinp{
   background:none;border:none;color:var(--muted);cursor:pointer;font-size:13px;
   line-height:1;padding:2px 4px;border-radius:4px;
 }
-.cp-remove:hover{color:#fff;background:rgba(255,255,255,.08);}
+.cp-remove:hover{color:var(--text);background:rgba(0,0,0,.06);}
 
 /* checkpoint results (inside the calculated strategy) */
 #checkpoint-results{display:flex;flex-direction:column;gap:8px;margin-bottom:20px;}
@@ -315,7 +318,7 @@ select.sinp{
 .cpr-eta{color:var(--muted);font-size:12px;}
 .cpr-cutoff{font-size:11px;font-weight:700;padding:3px 9px;border-radius:5px;letter-spacing:.2px;margin-left:auto;}
 .cpr-ok {background:rgba(82,199,116,.15);color:var(--flat);}
-.cpr-bad{background:rgba(192,57,43,.2);color:#e74c3c;}
+.cpr-bad{background:rgba(192,57,43,.15);color:#c0392b;}
 
 /* strategy meta */
 #strategy-result{display:none;}
@@ -332,18 +335,18 @@ thead th{
   font-size:10px;text-transform:uppercase;letter-spacing:.8px;
   border-bottom:1px solid var(--border);white-space:nowrap;
 }
-tbody tr{border-bottom:1px solid rgba(255,255,255,.03);transition:background .15s;}
+tbody tr{border-bottom:1px solid rgba(0,0,0,.05);transition:background .15s;}
 tbody tr:hover{background:rgba(232,101,10,.05);}
 tbody td{padding:9px 12px;vertical-align:middle;}
 .tbadge{
   display:inline-block;font-size:10px;font-weight:700;
   padding:2px 8px;border-radius:4px;text-transform:uppercase;letter-spacing:.4px;white-space:nowrap;
 }
-.t-up-hard{background:rgba(192,57,43,.2);color:#e74c3c;}
+.t-up-hard{background:rgba(192,57,43,.15);color:#c0392b;}
 .t-up-easy{background:rgba(255,107,53,.18);color:var(--up1);}
 .t-flat   {background:rgba(82,199,116,.15);color:var(--flat);}
 .t-dn-easy{background:rgba(79,195,247,.14);color:var(--down1);}
-.t-dn-hard{background:rgba(25,118,210,.2);color:#64b5f6;}
+.t-dn-hard{background:rgba(13,71,161,.15);color:#0d47a1;}
 .pace-bold{font-size:15px;font-weight:800;}
 .muted-sm {font-size:11px;color:var(--muted);font-weight:400;}
 .ebar{width:70px;}
@@ -353,7 +356,7 @@ tbody td{padding:9px 12px;vertical-align:middle;}
 
 /* ── LOADING ────────────────────────────────────────────── */
 #loading{
-  display:none;position:fixed;inset:0;background:rgba(11,11,11,.9);
+  display:none;position:fixed;inset:0;background:rgba(244,242,238,.92);
   z-index:9999;align-items:center;justify-content:center;flex-direction:column;gap:16px;
 }
 #loading.show{display:flex;}
@@ -446,7 +449,7 @@ footer{
   grid-column:1/-1;text-align:center;padding:40px 20px;color:var(--muted);font-size:13px;
 }
 .photo-skeleton{
-  background:linear-gradient(90deg,var(--s1) 25%,var(--s2) 50%,var(--s1) 75%);
+  background:linear-gradient(90deg,var(--s1) 25%,var(--s3) 50%,var(--s1) 75%);
   background-size:200% 100%;animation:shimmer 1.4s infinite;
   border-radius:10px;aspect-ratio:4/3;
 }
@@ -462,7 +465,9 @@ footer{
 .lb-box{
   position:relative;display:flex;flex-direction:column;align-items:center;
   max-width:min(860px,92vw);max-height:88vh;
-  background:var(--s1);border:1px solid rgba(255,255,255,.08);
+  /* Always dark, independent of the page theme — a photo viewer reads
+     better on a dark surface regardless of light/dark mode elsewhere. */
+  background:#161616;border:1px solid rgba(255,255,255,.08);
   border-radius:16px;padding:18px 18px 22px;overflow:auto;
   box-shadow:0 24px 60px rgba(0,0,0,.55);
 }
@@ -494,7 +499,7 @@ footer{
 }
 .lb-nav:hover{background:rgba(0,0,0,.7);color:#fff;}
 #lb-prev{left:8px;} #lb-next{right:8px;}
-.lb-counter{font-size:11px;color:var(--muted);margin-top:6px;}
+.lb-counter{font-size:11px;color:#999;margin-top:6px;}
 
 /* Camera marker on map */
 .cam-marker{
@@ -693,10 +698,10 @@ footer{
     <div class="map-legend">
       <div class="leg-title">Pendiente</div>
       <div class="leg-row"><div class="leg-line" style="background:#c0392b"></div> Subida fuerte (&gt;8%)</div>
-      <div class="leg-row"><div class="leg-line" style="background:#ff6b35"></div> Subida suave (4–8%)</div>
-      <div class="leg-row"><div class="leg-line" style="background:#52c774"></div> Plano (±4%)</div>
-      <div class="leg-row"><div class="leg-line" style="background:#4fc3f7"></div> Bajada suave (4–10%)</div>
-      <div class="leg-row"><div class="leg-line" style="background:#1976d2"></div> Bajada fuerte (&gt;10%)</div>
+      <div class="leg-row"><div class="leg-line" style="background:#d9480f"></div> Subida suave (4–8%)</div>
+      <div class="leg-row"><div class="leg-line" style="background:#2f9e44"></div> Plano (±4%)</div>
+      <div class="leg-row"><div class="leg-line" style="background:#0284c7"></div> Bajada suave (4–10%)</div>
+      <div class="leg-row"><div class="leg-line" style="background:#0d47a1"></div> Bajada fuerte (&gt;10%)</div>
     </div>
   </div>
 
@@ -953,10 +958,10 @@ function smooth(pts, radiusM=25) {
 // ── GRADE COLOR ────────────────────────────────────────────
 function gradeColor(g) {
   if (g >  0.12) return '#c0392b';
-  if (g >  0.04) return '#ff6b35';
-  if (g > -0.04) return '#52c774';
-  if (g > -0.10) return '#4fc3f7';
-  return '#1976d2';
+  if (g >  0.04) return '#d9480f';
+  if (g > -0.04) return '#2f9e44';
+  if (g > -0.10) return '#0284c7';
+  return '#0d47a1';
 }
 
 // ── PROCESS ────────────────────────────────────────────────
@@ -1005,9 +1010,9 @@ function processGPX(xml, filename) {
 
   // ITRA-style effort score: dist + D+/100 + D-/150
   const effortScore = Math.round(totalKm + gain/100 + loss/150);
-  const diffLabel = effortScore < 30 ? ['Fácil','#52c774'] :
-                    effortScore < 60 ? ['Moderada','#f39c12'] :
-                    effortScore < 100 ? ['Difícil','#ff6b35'] : ['Extrema','#c0392b'];
+  const diffLabel = effortScore < 30 ? ['Fácil','#2f9e44'] :
+                    effortScore < 60 ? ['Moderada','#c67c0e'] :
+                    effortScore < 100 ? ['Difícil','#d9480f'] : ['Extrema','#c0392b'];
 
   // Average elevation of the whole route
   const avgEle = gpxPoints.reduce((s,p)=>s+p.ele,0)/gpxPoints.length;
@@ -1260,7 +1265,7 @@ function renderMap() {
     html:`<div style="display:flex;align-items:center;gap:5px;background:#0b0b0b;border:1.5px solid ${color};border-radius:20px;padding:3px 8px 3px 4px;font-size:11px;font-weight:700;color:${color};white-space:nowrap;box-shadow:0 2px 8px rgba(0,0,0,.5)"><div style="width:8px;height:8px;border-radius:50%;background:${color}"></div>${label}</div>`,
     iconAnchor:[0, 14]
   });
-  L.marker(latlngs[0], { icon: mkIcon('#52c774','Inicio') }).addTo(map);
+  L.marker(latlngs[0], { icon: mkIcon('#2f9e44','Inicio') }).addTo(map);
   L.marker(latlngs[latlngs.length-1], { icon: mkIcon('#e8650a','Fin') }).addTo(map);
 
   map.fitBounds(bounds, { padding:[32,32] });
@@ -1286,7 +1291,7 @@ function renderChart() {
       const dd=(cumDistKm[i]-cumDistKm[i-step])*1000;
       const de=gpxPoints[i].ele-gpxPoints[i-step].ele;
       colors.push(gradeColor(dd>0?de/dd:0));
-    } else colors.push('#52c774');
+    } else colors.push('#2f9e44');
   }
 
   // Closest point in full array
@@ -1304,7 +1309,7 @@ function renderChart() {
         data:ys,
         borderColor: ctx2 => {
           const g=ctx2.chart.ctx.createLinearGradient(0,0,ctx2.chart.width,0);
-          g.addColorStop(0,'#52c774');g.addColorStop(.5,'#ff6b35');g.addColorStop(1,'#4fc3f7');
+          g.addColorStop(0,'#2f9e44');g.addColorStop(.5,'#d9480f');g.addColorStop(1,'#0284c7');
           return g;
         },
         borderWidth:2.5,
@@ -1324,7 +1329,7 @@ function renderChart() {
         segment:{
           borderColor: ctx2=>{
             const i=ctx2.p1DataIndex;
-            return i<colors.length?colors[i]:'#52c774';
+            return i<colors.length?colors[i]:'#2f9e44';
           }
         }
       }]
@@ -1346,12 +1351,12 @@ function renderChart() {
       },
       scales:{
         x:{
-          ticks:{color:'#555',maxTicksLimit:10,callback:v=>v+' km'},
-          grid:{color:'rgba(255,255,255,.035)'},border:{color:'transparent'}
+          ticks:{color:'#8a8474',maxTicksLimit:10,callback:v=>v+' km'},
+          grid:{color:'rgba(0,0,0,.06)'},border:{color:'transparent'}
         },
         y:{
-          ticks:{color:'#555',callback:v=>v+' m'},
-          grid:{color:'rgba(255,255,255,.035)'},border:{color:'transparent'}
+          ticks:{color:'#8a8474',callback:v=>v+' m'},
+          grid:{color:'rgba(0,0,0,.06)'},border:{color:'transparent'}
         }
       },
       onHover:(_,els,chart)=>{
@@ -1393,11 +1398,11 @@ function segMult(grade, avgEle){
   return gradeMult(grade) * altFactor(avgEle);
 }
 function terrainInfo(g){
-  if(g>.08)  return['Subida fuerte','t-up-hard','#e74c3c'];
-  if(g>.04)  return['Subida suave', 't-up-easy','#ff6b35'];
-  if(g>-.04) return['Plano',        't-flat',   '#52c774'];
-  if(g>-.10) return['Bajada suave', 't-dn-easy','#4fc3f7'];
-  return           ['Bajada fuerte','t-dn-hard', '#64b5f6'];
+  if(g>.08)  return['Subida fuerte','t-up-hard','#c0392b'];
+  if(g>.04)  return['Subida suave', 't-up-easy','#d9480f'];
+  if(g>-.04) return['Plano',        't-flat',   '#2f9e44'];
+  if(g>-.10) return['Bajada suave', 't-dn-easy','#0284c7'];
+  return           ['Bajada fuerte','t-dn-hard', '#0d47a1'];
 }
 
 // ── CHECKPOINTS ─────────────────────────────────────────────
@@ -1555,7 +1560,7 @@ function calcStrategy(){
     const pct=Math.round(r.mult/maxM*100);
     const af=altFactor(r.avgEle);
     // Altitude badge color: neutral under 2000, yellow 2000-3000, orange 3000-4000, red 4000+
-    const altColor= r.avgEle<2000?'var(--muted)':r.avgEle<3000?'#f1c40f':r.avgEle<4000?'#ff6b35':'#e74c3c';
+    const altColor= r.avgEle<2000?'var(--muted)':r.avgEle<3000?'#a6790a':r.avgEle<4000?'#c2410c':'#c0392b';
     const altLabel= r.avgEle>=1500?`<span style="color:${altColor};font-size:11px;font-weight:600">${r.avgEle.toLocaleString()}m${af>1.01?` <span style="color:${altColor};opacity:.8">×${af.toFixed(2)}</span>`:''}</span>`
       :`<span style="color:var(--muted);font-size:11px">${r.avgEle.toLocaleString()}m</span>`;
     const kmLbl=splitBy==='km'
