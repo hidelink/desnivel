@@ -218,7 +218,7 @@ header{
 .map-legend{
   position:absolute;bottom:16px;left:16px;z-index:500;
   background:rgba(11,11,11,.88);border:1px solid var(--border2);
-  border-radius:10px;padding:12px 14px;backdrop-filter:blur(8px);
+  border-radius:10px;padding:12px 30px 12px 14px;backdrop-filter:blur(8px);
 }
 /* .map-legend is always a dark chip floating over the map, independent
    of the page theme, so its text is hardcoded light rather than following
@@ -226,6 +226,19 @@ header{
 .leg-title{font-size:10px;color:#999;text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px;}
 .leg-row{display:flex;align-items:center;gap:8px;margin-bottom:5px;font-size:11px;color:#efefef;}
 .leg-line{width:22px;height:3px;border-radius:2px;flex-shrink:0;}
+.leg-close{
+  position:absolute;top:6px;right:6px;background:none;border:none;
+  color:#999;cursor:pointer;font-size:13px;line-height:1;padding:4px 6px;border-radius:4px;
+}
+.leg-close:hover{color:#fff;background:rgba(255,255,255,.12);}
+.leg-reopen{
+  display:none;position:absolute;bottom:16px;left:16px;z-index:500;
+  width:34px;height:34px;align-items:center;justify-content:center;
+  background:rgba(11,11,11,.88);border:1px solid var(--border2);border-radius:10px;
+  backdrop-filter:blur(8px);color:#efefef;font-size:13px;cursor:pointer;
+}
+.leg-reopen:hover{background:rgba(11,11,11,.95);}
+.leg-reopen.show{display:flex;}
 .hover-dot{width:12px;height:12px;background:#fff;border:3px solid var(--orange);border-radius:50%;box-shadow:0 0 8px rgba(232,101,10,.8);}
 
 /* ── CHART ──────────────────────────────────────────────── */
@@ -695,7 +708,8 @@ footer{
   <div class="sec"><span class="sec-label">Mapa</span><div class="sec-line"></div></div>
   <div class="map-wrap">
     <div id="map"></div>
-    <div class="map-legend">
+    <div class="map-legend" id="map-legend">
+      <button type="button" class="leg-close" onclick="toggleLegend(false)" aria-label="Ocultar leyenda de pendiente" title="Ocultar">✕</button>
       <div class="leg-title">Pendiente</div>
       <div class="leg-row"><div class="leg-line" style="background:#c0392b"></div> Subida fuerte (&gt;8%)</div>
       <div class="leg-row"><div class="leg-line" style="background:#d9480f"></div> Subida suave (4–8%)</div>
@@ -703,6 +717,7 @@ footer{
       <div class="leg-row"><div class="leg-line" style="background:#0284c7"></div> Bajada suave (4–10%)</div>
       <div class="leg-row"><div class="leg-line" style="background:#0d47a1"></div> Bajada fuerte (&gt;10%)</div>
     </div>
+    <button type="button" class="leg-reopen" id="leg-reopen" onclick="toggleLegend(true)" aria-label="Mostrar leyenda de pendiente" title="Mostrar leyenda de pendiente">△</button>
   </div>
 
   <!-- ELEVATION CHART -->
@@ -1226,6 +1241,12 @@ function animateCount(id, from, to, decimals, sep) {
 }
 
 // ── MAP ─────────────────────────────────────────────────────
+// Lets the user dismiss the grade legend if it's covering part of the map
+// they want to see, and bring it back with a small floating button.
+function toggleLegend(show){
+  document.getElementById('map-legend').style.display = show ? 'block' : 'none';
+  document.getElementById('leg-reopen').classList.toggle('show', !show);
+}
 function renderMap() {
   if (map) { map.remove(); map = null; }
   map = L.map('map', { zoomControl: true });
