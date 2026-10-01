@@ -713,10 +713,10 @@ footer{
       <button class="login-btn" onclick="openLoginModal()">Iniciar sesión</button>
     </div>
     <div id="auth-logged-in" style="display:none;align-items:center;gap:10px">
-      <div class="auth-chip">
+      <a class="auth-chip" id="auth-chip-link" href="/">
         <div class="auth-avatar" id="auth-avatar">?</div>
         <span id="auth-email"></span>
-      </div>
+      </a>
       <button class="logout-btn" onclick="logout()">Salir</button>
     </div>
   </div>
@@ -1129,6 +1129,7 @@ async function renderAuthState(session){
   if (profile) {
     document.getElementById('auth-avatar').style.background = profile.avatar_color;
     document.getElementById('auth-email').textContent = '@' + profile.username;
+    document.getElementById('auth-chip-link').href = '/' + profile.username;
     closeOnboardingModal();
   } else {
     openOnboardingModal(session.user);
@@ -1236,6 +1237,7 @@ async function completeOnboarding(){
   }
   document.getElementById('auth-avatar').style.background = obSelectedColor;
   document.getElementById('auth-email').textContent = '@' + username;
+  document.getElementById('auth-chip-link').href = '/' + username;
   closeOnboardingModal();
 }
 

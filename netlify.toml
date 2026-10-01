@@ -7,3 +7,12 @@
 
 [functions]
   directory = "netlify/functions"
+
+# Clean profile URLs (/hidelink instead of /perfil?u=hidelink). A rewrite
+# (status 200, not a redirect), so the address bar keeps the clean path.
+# Netlify only applies this when no real file matches the request first, so
+# existing routes like /rutas or /acerca are unaffected.
+[[redirects]]
+  from = "/:username"
+  to = "/perfil?u=:username"
+  status = 200
