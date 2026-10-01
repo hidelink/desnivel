@@ -106,11 +106,13 @@ header{
 .logout-btn:hover{border-color:var(--up2);color:var(--up2);}
 
 /* ── LOGIN MODAL ────────────────────────────────────────── */
-#login-overlay{
+#login-overlay, #onboarding-overlay{
   display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);
   z-index:2000;align-items:center;justify-content:center;padding:20px;
 }
-#login-overlay.show{display:flex;}
+#login-overlay.show, #onboarding-overlay.show{display:flex;}
+.ob-swatch{width:22px;height:22px;border-radius:50%;cursor:pointer;border:2px solid transparent;}
+.ob-swatch.selected{border-color:var(--text);}
 .login-card{
   width:380px;max-width:100%;background:var(--s1);border:1px solid var(--border);
   border-radius:16px;padding:32px 28px;display:flex;flex-direction:column;gap:18px;position:relative;
@@ -644,6 +646,39 @@ footer{
   </div>
 </div>
 
+<!-- ONBOARDING MODAL (first login: choose username) -->
+<div id="onboarding-overlay">
+  <div class="login-card">
+    <div>
+      <div class="login-title">¡Bienvenido a Desnivel! 👋</div>
+      <div class="login-sub">Elige tu usuario — así te van a encontrar en tu perfil público.</div>
+    </div>
+    <div style="display:flex;align-items:center;gap:14px">
+      <div class="auth-avatar" id="ob-avatar-preview" style="width:48px;height:48px;font-size:18px;">?</div>
+      <div style="display:flex;gap:6px" id="ob-color-swatches">
+        <div class="ob-swatch" data-color="#e8650a" style="background:#e8650a"></div>
+        <div class="ob-swatch" data-color="#0d47a1" style="background:#0d47a1"></div>
+        <div class="ob-swatch" data-color="#2f9e44" style="background:#2f9e44"></div>
+        <div class="ob-swatch" data-color="#8e44ad" style="background:#8e44ad"></div>
+        <div class="ob-swatch" data-color="#c0392b" style="background:#c0392b"></div>
+      </div>
+    </div>
+    <div class="login-field">
+      <label for="ob-name">Nombre</label>
+      <input id="ob-name" type="text" placeholder="Tu nombre">
+    </div>
+    <div class="login-field">
+      <label for="ob-username">Usuario</label>
+      <div style="display:flex;align-items:center;background:var(--bg);border:1px solid var(--border2);border-radius:8px;padding:0 11px">
+        <span style="font-size:13px;color:var(--muted2);font-weight:600">desnivel.run/@</span>
+        <input id="ob-username" type="text" placeholder="usuario" style="flex-grow:1;background:transparent;border:none;padding:10px 4px;font-size:13px;color:var(--text);min-width:0">
+      </div>
+      <div id="ob-username-status" style="font-size:11.5px;margin-top:2px;min-height:16px"></div>
+    </div>
+    <button class="primary" style="padding:11px;border-radius:9px;font-size:14px;" onclick="completeOnboarding()">Continuar</button>
+  </div>
+</div>
+
 <!-- HEADER -->
 <header>
   <a class="logo" href="/">
@@ -1070,24 +1105,138 @@ async function logout(){
   await supabaseClient.auth.signOut();
 }
 
-function renderAuthState(session){
+async function renderAuthState(session){
   const loggedOut = document.getElementById('auth-logged-out');
   const loggedIn = document.getElementById('auth-logged-in');
-  if (session) {
-    loggedOut.style.display = 'none';
-    loggedIn.style.display = 'flex';
-    const email = session.user.email || '';
-    document.getElementById('auth-avatar').textContent = (email[0] || '?').toUpperCase();
-    document.getElementById('auth-email').textContent = email;
-  } else {
+  if (!session) {
     loggedOut.style.display = 'flex';
     loggedIn.style.display = 'none';
+    closeOnboardingModal();
+    return;
+  }
+  loggedOut.style.display = 'none';
+  loggedIn.style.display = 'flex';
+  const email = session.user.email || '';
+  document.getElementById('auth-avatar').textContent = (email[0] || '?').toUpperCase();
+  document.getElementById('auth-email').textContent = email;
+
+  const { data: profile } = await supabaseClient
+    .from('profiles')
+    .select('username, avatar_color')
+    .eq('id', session.user.id)
+    .maybeSingle();
+
+  if (profile) {
+    document.getElementById('auth-avatar').style.background = profile.avatar_color;
+    document.getElementById('auth-email').textContent = '@' + profile.username;
+    closeOnboardingModal();
+  } else {
+    openOnboardingModal(session.user);
   }
 }
 
 if (supabaseClient) {
   supabaseClient.auth.onAuthStateChange((_event, session) => renderAuthState(session));
   supabaseClient.auth.getSession().then(({ data }) => renderAuthState(data.session));
+}
+
+// ── ONBOARDING (choose username on first login) ────────────
+let obSelectedColor = '#e8650a';
+let obUsernameCheckTimer = null;
+
+function openOnboardingModal(user){
+  const suggested = (user.email || 'runner').split('@')[0].toLowerCase().replace(/[^a-z0-9_]/g, '').slice(0, 20) || 'runner';
+  const fullName = user.user_metadata?.full_name || user.user_metadata?.name || '';
+  document.getElementById('ob-name').value = fullName;
+  document.getElementById('ob-username').value = suggested;
+  document.getElementById('ob-avatar-preview').textContent = (fullName[0] || suggested[0] || '?').toUpperCase();
+  document.getElementById('ob-username-status').textContent = '';
+  setObColor('#e8650a');
+  document.getElementById('onboarding-overlay').classList.add('show');
+  checkUsernameAvailability();
+}
+function closeOnboardingModal(){
+  document.getElementById('onboarding-overlay').classList.remove('show');
+}
+function setObColor(color){
+  obSelectedColor = color;
+  document.getElementById('ob-avatar-preview').style.background = color;
+  document.querySelectorAll('.ob-swatch').forEach(el => {
+    el.classList.toggle('selected', el.dataset.color === color);
+  });
+}
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('ob-color-swatches')?.addEventListener('click', (e) => {
+    const swatch = e.target.closest('.ob-swatch');
+    if (swatch) setObColor(swatch.dataset.color);
+  });
+  document.getElementById('ob-name')?.addEventListener('input', (e) => {
+    const name = e.target.value.trim();
+    const username = document.getElementById('ob-username').value.trim();
+    document.getElementById('ob-avatar-preview').textContent = (name[0] || username[0] || '?').toUpperCase();
+  });
+  document.getElementById('ob-username')?.addEventListener('input', () => {
+    clearTimeout(obUsernameCheckTimer);
+    obUsernameCheckTimer = setTimeout(checkUsernameAvailability, 400);
+  });
+});
+
+function normalizeUsername(raw){
+  return raw.trim().toLowerCase().replace(/[^a-z0-9_]/g, '');
+}
+
+async function checkUsernameAvailability(){
+  const status = document.getElementById('ob-username-status');
+  const username = normalizeUsername(document.getElementById('ob-username').value);
+  if (!username) { status.textContent = ''; return; }
+  if (!/^[a-z0-9_]{3,20}$/.test(username)) {
+    status.textContent = 'Usa minúsculas, números y guion bajo. 3–20 caracteres.';
+    status.style.color = 'var(--up2)';
+    return;
+  }
+  status.textContent = 'Revisando…';
+  status.style.color = 'var(--muted2)';
+  const { count } = await supabaseClient
+    .from('profiles')
+    .select('username', { count: 'exact', head: true })
+    .eq('username', username);
+  if (count > 0) {
+    status.textContent = 'Ese usuario ya está en uso.';
+    status.style.color = 'var(--up2)';
+  } else {
+    status.textContent = '✓ Disponible';
+    status.style.color = 'var(--flat)';
+  }
+}
+
+async function completeOnboarding(){
+  if (!supabaseClient) return;
+  const { data: { session } } = await supabaseClient.auth.getSession();
+  if (!session) return;
+  const username = normalizeUsername(document.getElementById('ob-username').value);
+  const displayName = document.getElementById('ob-name').value.trim() || username;
+  if (!/^[a-z0-9_]{3,20}$/.test(username)) {
+    alert('Usuario inválido: usa minúsculas, números y guion bajo, 3–20 caracteres.');
+    return;
+  }
+  const { error } = await supabaseClient.from('profiles').insert({
+    id: session.user.id,
+    username,
+    display_name: displayName,
+    avatar_color: obSelectedColor,
+  });
+  if (error) {
+    if (error.code === '23505') {
+      document.getElementById('ob-username-status').textContent = 'Ese usuario ya está en uso.';
+      document.getElementById('ob-username-status').style.color = 'var(--up2)';
+    } else {
+      alert('No se pudo guardar tu perfil: ' + error.message);
+    }
+    return;
+  }
+  document.getElementById('auth-avatar').style.background = obSelectedColor;
+  document.getElementById('auth-email').textContent = '@' + username;
+  closeOnboardingModal();
 }
 
 // ── STATE ──────────────────────────────────────────────────

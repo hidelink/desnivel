@@ -46,3 +46,33 @@ language sql
 as $$
   update routes set view_count = view_count + 1 where id = route_id;
 $$;
+
+-- Profiles: one per auth.users row, created by the client right after first
+-- login via the "elige tu usuario" step (not a trigger — the user picks the
+-- username themselves, so there's nothing to insert until then).
+create table if not exists profiles (
+  id uuid primary key references auth.users(id) on delete cascade,
+  username text not null unique,
+  display_name text not null default '',
+  avatar_color text not null default '#e8650a',
+  created_at timestamptz not null default now(),
+  constraint username_format check (username ~ '^[a-z0-9_]{3,20}$')
+);
+
+alter table profiles enable row level security;
+
+-- Public profiles, like public routes — anyone can read any profile.
+create policy "profiles_public_read" on profiles
+  for select
+  using (true);
+
+-- A user can only ever create/edit their own profile row (client writes
+-- this directly with the anon key, unlike routes — there's no serverless
+-- function in front of it, so RLS is the only gate).
+create policy "profiles_owner_insert" on profiles
+  for insert
+  with check (auth.uid() = id);
+
+create policy "profiles_owner_update" on profiles
+  for update
+  using (auth.uid() = id);
