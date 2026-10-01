@@ -1623,14 +1623,21 @@ async function saveRouteAndGetId(){
 // Uploading a GPX while logged in saves it to the profile automatically —
 // no separate "publish" step. Silent: a failure here shouldn't interrupt
 // someone who only wanted to analyze a route, so it's logged, not alerted.
+// autoSaveInFlight guards against two overlapping calls both passing the
+// currentShareId check before either has set it (e.g. if a future change
+// ever fires handleFile twice for one upload) and creating duplicate rows.
+let autoSaveInFlight = false;
 async function autoSaveIfLoggedIn(){
-  if (!supabaseClient || currentShareId) return;
-  const { data: { session } } = await supabaseClient.auth.getSession();
-  if (!session) return;
+  if (!supabaseClient || currentShareId || autoSaveInFlight) return;
+  autoSaveInFlight = true;
   try {
+    const { data: { session } } = await supabaseClient.auth.getSession();
+    if (!session) return;
     currentShareId = await saveRouteAndGetId();
   } catch (err) {
     console.error('No se pudo guardar la ruta en tu perfil automáticamente:', err);
+  } finally {
+    autoSaveInFlight = false;
   }
 }
 
@@ -2082,7 +2089,6 @@ function calcStrategy(){
   document.getElementById('strategy-result').style.display='block';
 }
 
-document.getElementById('file-input').addEventListener('change',function(){if(this.files[0])handleFile(this.files[0]);});
 document.getElementById('photo-upload').addEventListener('change',function(){if(this.files.length)handleUserPhotos(this.files);});
 
 // ── PHOTOS ───────────────────────────────────────────────────────────────────
