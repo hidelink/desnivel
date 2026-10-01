@@ -1054,9 +1054,14 @@ async function signUpWithEmail(){
   const password = document.getElementById('login-pass').value;
   if (!email || !password) { alert('Ingresa tu correo y contraseña.'); return; }
   if (password.length < 6) { alert('La contraseña debe tener al menos 6 caracteres.'); return; }
-  const { error } = await supabaseClient.auth.signUp({ email, password });
+  const { data, error } = await supabaseClient.auth.signUp({ email, password });
   if (error) { alert('No se pudo crear la cuenta: ' + translateAuthError(error.message)); return; }
-  alert('Cuenta creada. Revisa tu correo para confirmarla antes de iniciar sesión.');
+  // With email confirmation off, signUp logs the user in immediately — only
+  // show the "check your inbox" message for the (currently unused) case
+  // where confirmation is required and there's no session yet.
+  if (!data.session) {
+    alert('Cuenta creada. Revisa tu correo para confirmarla antes de iniciar sesión.');
+  }
   closeLoginModal();
 }
 
