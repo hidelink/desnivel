@@ -1,0 +1,206 @@
+---
+const SUPABASE_URL = import.meta.env.PUBLIC_SUPABASE_URL;
+const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
+---
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Editar perfil · Desnivel</title>
+<script is:inline src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script is:inline define:vars={{ SUPABASE_URL, SUPABASE_ANON_KEY }}>
+  window.__SUPABASE_URL__ = SUPABASE_URL;
+  window.__SUPABASE_ANON_KEY__ = SUPABASE_ANON_KEY;
+</script>
+<style is:global>
+:root {
+  --bg: #f4f2ee; --s1: #ffffff; --border: #e1ddd2; --border2: #cfc9ba;
+  --orange: #e8650a; --orange2: #ff7c2a; --text: #1a1a1a; --muted: #6b6558; --muted2: #9a9384;
+  --up2: #c0392b; --flat: #2f9e44;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{min-height:100%;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;line-height:1.5;}
+a{text-decoration:none;color:inherit;}
+header{display:flex;align-items:center;justify-content:space-between;padding:14px 28px;background:var(--s1);border-bottom:1px solid var(--border);}
+.logo{display:flex;align-items:center;gap:10px;}
+.logo-text{font-size:17px;font-weight:800;letter-spacing:-.4px;color:var(--text);}
+.logo-text span{color:var(--orange);}
+.nav-link{font-size:13px;font-weight:600;color:var(--muted);}
+main{max-width:460px;margin:0 auto;padding:48px 24px 80px;}
+#state-msg{font-size:14px;color:var(--muted);text-align:center;padding:60px 20px;}
+h1{font-size:20px;font-weight:800;margin-bottom:22px;}
+.card{background:var(--s1);border:1px solid var(--border);border-radius:16px;padding:28px;display:flex;flex-direction:column;gap:20px;}
+.field{display:flex;flex-direction:column;gap:4px;}
+.field label{font-size:12px;font-weight:600;color:var(--muted);}
+.field input{width:100%;background:var(--bg);border:1px solid var(--border2);border-radius:8px;padding:10px 11px;font-size:13px;color:var(--text);}
+.username-row{display:flex;align-items:center;background:var(--bg);border:1px solid var(--border2);border-radius:8px;padding:0 11px;}
+.username-row span{font-size:13px;color:var(--muted2);font-weight:600;}
+.username-row input{flex-grow:1;background:transparent;border:none;padding:10px 4px;font-size:13px;color:var(--text);min-width:0;}
+.swatches{display:flex;gap:6px;}
+.swatch{width:22px;height:22px;border-radius:50%;cursor:pointer;border:2px solid transparent;}
+.swatch.selected{border-color:var(--text);}
+.avatar-preview{width:48px;height:48px;border-radius:50%;color:#fff;font-size:18px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.actions{display:flex;gap:10px;}
+.actions a, .actions button{flex:1;padding:11px;border-radius:9px;font-size:13px;font-weight:700;cursor:pointer;border:none;text-align:center;}
+.primary{background:var(--orange);color:#fff;}
+.primary:hover{background:var(--orange2);}
+.secondary{background:#fff;border:1px solid var(--border2);color:var(--text);}
+</style>
+</head>
+<body>
+
+<header>
+  <a class="logo" href="/">
+    <svg width="32" height="32" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+      <rect width="512" height="512" rx="112" fill="#141414"/>
+      <path d="M30 420 L170 185 L230 260 L256 220 L282 260 L342 185 L482 420Z" fill="#1c1c1c"/>
+      <path d="M52 390 C80 388,108 384,130 362 C152 340,162 308,178 280 C194 252,212 230,228 208 C240 190,250 172,256 152 C262 172,268 190,280 208 C296 230,316 256,336 288 C356 320,374 350,400 370 C424 386,446 390,462 392" fill="none" stroke="#e8650a" stroke-width="36" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    <span class="logo-text">Desni<span>vel</span></span>
+  </a>
+  <a class="nav-link" href="/">← Analizador</a>
+</header>
+
+<main>
+  <div id="state-msg">Cargando…</div>
+  <div id="form-content" style="display:none">
+    <h1>Editar perfil</h1>
+    <div class="card">
+      <div style="display:flex;align-items:center;gap:14px">
+        <div class="avatar-preview" id="ep-avatar-preview">?</div>
+        <div class="swatches" id="ep-color-swatches">
+          <div class="swatch" data-color="#e8650a" style="background:#e8650a"></div>
+          <div class="swatch" data-color="#0d47a1" style="background:#0d47a1"></div>
+          <div class="swatch" data-color="#2f9e44" style="background:#2f9e44"></div>
+          <div class="swatch" data-color="#8e44ad" style="background:#8e44ad"></div>
+          <div class="swatch" data-color="#c0392b" style="background:#c0392b"></div>
+        </div>
+      </div>
+      <div class="field">
+        <label for="ep-name">Nombre</label>
+        <input id="ep-name" type="text">
+      </div>
+      <div class="field">
+        <label for="ep-username">Usuario</label>
+        <div class="username-row">
+          <span>desnivel.run/</span>
+          <input id="ep-username" type="text">
+        </div>
+        <div id="ep-username-status" style="font-size:11.5px;margin-top:2px;min-height:16px"></div>
+      </div>
+      <div class="actions">
+        <a class="secondary" id="cancel-link" href="/">Cancelar</a>
+        <button type="button" class="primary" onclick="saveProfile()">Guardar cambios</button>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script is:inline>
+const supabaseClient = supabase.createClient(window.__SUPABASE_URL__, window.__SUPABASE_ANON_KEY__);
+let epSelectedColor = '#e8650a';
+let epUserId = null;
+let epUsernameCheckTimer = null;
+
+function setColor(color){
+  epSelectedColor = color;
+  document.getElementById('ep-avatar-preview').style.background = color;
+  document.querySelectorAll('.swatch').forEach(el => el.classList.toggle('selected', el.dataset.color === color));
+}
+
+function normalizeUsername(raw){
+  return raw.trim().toLowerCase().replace(/[^a-z0-9_]/g, '');
+}
+
+async function checkUsernameAvailability(){
+  const status = document.getElementById('ep-username-status');
+  const username = normalizeUsername(document.getElementById('ep-username').value);
+  if (!username) { status.textContent = ''; return; }
+  if (!/^[a-z0-9_]{3,20}$/.test(username)) {
+    status.textContent = 'Usa minúsculas, números y guion bajo. 3–20 caracteres.';
+    status.style.color = 'var(--up2)';
+    return;
+  }
+  status.textContent = 'Revisando…';
+  status.style.color = 'var(--muted2)';
+  const { count } = await supabaseClient
+    .from('profiles')
+    .select('username', { count: 'exact', head: true })
+    .eq('username', username)
+    .neq('id', epUserId);
+  if (count > 0) {
+    status.textContent = 'Ese usuario ya está en uso.';
+    status.style.color = 'var(--up2)';
+  } else {
+    status.textContent = '✓ Disponible';
+    status.style.color = 'var(--flat)';
+  }
+}
+
+async function saveProfile(){
+  const username = normalizeUsername(document.getElementById('ep-username').value);
+  const displayName = document.getElementById('ep-name').value.trim() || username;
+  if (!/^[a-z0-9_]{3,20}$/.test(username)) {
+    alert('Usuario inválido: usa minúsculas, números y guion bajo, 3–20 caracteres.');
+    return;
+  }
+  const { error } = await supabaseClient
+    .from('profiles')
+    .update({ username, display_name: displayName, avatar_color: epSelectedColor })
+    .eq('id', epUserId);
+  if (error) {
+    if (error.code === '23505') {
+      document.getElementById('ep-username-status').textContent = 'Ese usuario ya está en uso.';
+      document.getElementById('ep-username-status').style.color = 'var(--up2)';
+    } else {
+      alert('No se pudo guardar tu perfil: ' + error.message);
+    }
+    return;
+  }
+  location.href = '/' + username;
+}
+
+async function init(){
+  const stateMsg = document.getElementById('state-msg');
+  const { data: { session } } = await supabaseClient.auth.getSession();
+  if (!session) {
+    stateMsg.innerHTML = 'Necesitas iniciar sesión primero. <a href="/" style="color:var(--orange);font-weight:700">Ir al inicio</a>';
+    return;
+  }
+  epUserId = session.user.id;
+
+  const { data: profile, error } = await supabaseClient
+    .from('profiles')
+    .select('username, display_name, avatar_color')
+    .eq('id', epUserId)
+    .maybeSingle();
+
+  if (error || !profile) {
+    stateMsg.innerHTML = 'No encontramos tu perfil. <a href="/" style="color:var(--orange);font-weight:700">Ir al inicio</a>';
+    return;
+  }
+
+  document.getElementById('ep-name').value = profile.display_name || '';
+  document.getElementById('ep-username').value = profile.username;
+  document.getElementById('cancel-link').href = '/' + profile.username;
+  document.getElementById('ep-avatar-preview').textContent = (profile.display_name[0] || profile.username[0] || '?').toUpperCase();
+  setColor(profile.avatar_color);
+
+  document.getElementById('ep-color-swatches').addEventListener('click', (e) => {
+    const swatch = e.target.closest('.swatch');
+    if (swatch) setColor(swatch.dataset.color);
+  });
+  document.getElementById('ep-username').addEventListener('input', () => {
+    clearTimeout(epUsernameCheckTimer);
+    epUsernameCheckTimer = setTimeout(checkUsernameAvailability, 400);
+  });
+
+  stateMsg.style.display = 'none';
+  document.getElementById('form-content').style.display = 'block';
+}
+
+init();
+</script>
+</body>
+</html>

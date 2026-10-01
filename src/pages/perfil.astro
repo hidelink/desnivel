@@ -45,6 +45,23 @@ header{
 main{max-width:1000px;margin:0 auto;padding:48px 24px 80px;}
 #state-msg{font-size:14px;color:var(--muted);text-align:center;padding:60px 20px;}
 .profile-header{display:flex;align-items:center;gap:20px;margin-bottom:8px;}
+.edit-profile-btn{
+  margin-left:auto;background:var(--s1);border:1px solid var(--border2);color:var(--text);
+  font-size:13px;font-weight:600;padding:9px 18px;border-radius:8px;
+}
+.edit-profile-btn:hover{border-color:var(--orange);color:var(--orange);}
+.card-icon-btn{
+  width:26px;height:26px;border-radius:7px;background:var(--bg);border:1px solid var(--border2);
+  display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--muted);
+}
+.card-icon-btn:hover{border-color:var(--muted2);color:var(--text);}
+.card-icon-btn.danger:hover{border-color:var(--up2);color:var(--up2);}
+.card-owner-actions{display:flex;gap:6px;margin-left:auto;}
+.hidden-badge{
+  font-size:10px;font-weight:700;letter-spacing:.3px;color:var(--muted);background:var(--bg);
+  padding:3px 8px;border-radius:20px;width:fit-content;
+}
+.route-card.is-hidden{opacity:.55;}
 .profile-avatar{
   width:76px;height:76px;border-radius:50%;color:#fff;font-size:30px;font-weight:800;
   display:flex;align-items:center;justify-content:center;flex-shrink:0;
@@ -93,6 +110,7 @@ main{max-width:1000px;margin:0 auto;padding:48px 24px 80px;}
         <div class="profile-name" id="p-name"></div>
         <div class="profile-meta" id="p-meta"></div>
       </div>
+      <a class="edit-profile-btn" id="edit-profile-link" href="/editar-perfil" style="display:none">Editar perfil</a>
     </div>
     <div class="divider"></div>
     <div class="section-title">Rutas</div>
@@ -110,14 +128,31 @@ const DIFF_COLORS = {
   'Extrema':  { bg: '#fbeae8', fg: 'var(--up2)' },
 };
 
-function routeCardHtml(row){
+function routeCardHtml(row, isOwner){
   const plan = row.plan || {};
   const summary = plan.summary || {};
   const name = plan.name || plan.filename || 'Ruta sin nombre';
   const diff = summary.diffLabel || '';
   const colors = DIFF_COLORS[diff] || { bg: '#f1f0ec', fg: 'var(--muted)' };
+  const ownerActions = isOwner ? `
+    <div class="card-owner-actions">
+      <button type="button" class="card-icon-btn" title="${row.is_hidden ? 'Mostrar' : 'Ocultar'}" onclick="toggleHidden('${row.id}', ${!row.is_hidden})">
+        ${row.is_hidden
+          ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>'
+          : '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-7 0-11-8-11-8a18.5 18.5 0 0 1 5.06-5.94M9.9 4.24A10.94 10.94 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>'
+        }
+      </button>
+      <button type="button" class="card-icon-btn danger" title="Borrar" onclick="deleteRoute('${row.id}')">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6m5 0V4a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v2"/></svg>
+      </button>
+    </div>
+  ` : '';
   return `
-    <div class="route-card">
+    <div class="route-card ${row.is_hidden ? 'is-hidden' : ''}">
+      <div style="display:flex;align-items:flex-start">
+        ${row.is_hidden ? '<span class="hidden-badge">OCULTA</span>' : ''}
+        ${ownerActions}
+      </div>
       <div class="route-card-name">${escapeHtml(name)}</div>
       <div class="route-card-stats">
         <span><b>${escapeHtml(summary.dist || '—')}</b></span>
@@ -129,6 +164,19 @@ function routeCardHtml(row){
       </a>
     </div>
   `;
+}
+
+async function toggleHidden(routeId, nextHidden){
+  const { error } = await supabaseClient.from('routes').update({ is_hidden: nextHidden }).eq('id', routeId);
+  if (error) { alert('No se pudo actualizar la ruta: ' + error.message); return; }
+  await loadProfile();
+}
+
+async function deleteRoute(routeId){
+  if (!confirm('¿Borrar esta ruta? Esta acción no se puede deshacer.')) return;
+  const { error } = await supabaseClient.from('routes').delete().eq('id', routeId);
+  if (error) { alert('No se pudo borrar la ruta: ' + error.message); return; }
+  await loadProfile();
 }
 
 function escapeHtml(s){
@@ -157,17 +205,21 @@ async function loadProfile(){
   document.getElementById('p-name').textContent = profile.display_name || ('@' + profile.username);
   const year = new Date(profile.created_at).getFullYear();
 
-  const { data: routes } = await supabaseClient
-    .from('routes')
-    .select('id, plan, created_at')
-    .eq('user_id', profile.id)
-    .eq('is_hidden', false)
-    .order('created_at', { ascending: false });
+  const { data: { session } } = await supabaseClient.auth.getSession();
+  const isOwner = !!session && session.user.id === profile.id;
+  if (isOwner) document.getElementById('edit-profile-link').style.display = '';
+
+  // An owner sees their hidden routes too (RLS allows it); a visitor only
+  // sees what's public.
+  let query = supabaseClient.from('routes').select('id, plan, is_hidden, created_at').eq('user_id', profile.id);
+  if (!isOwner) query = query.eq('is_hidden', false);
+  const { data: routes } = await query.order('created_at', { ascending: false });
 
   const routeList = routes || [];
-  document.getElementById('p-meta').textContent = `@${profile.username} · ${routeList.length} ${routeList.length === 1 ? 'ruta' : 'rutas'} · miembro desde ${year}`;
+  const visibleCount = routeList.filter(r => !r.is_hidden).length;
+  document.getElementById('p-meta').textContent = `@${profile.username} · ${visibleCount} ${visibleCount === 1 ? 'ruta' : 'rutas'} · miembro desde ${year}`;
   document.getElementById('route-grid').innerHTML = routeList.length
-    ? routeList.map(routeCardHtml).join('')
+    ? routeList.map(r => routeCardHtml(r, isOwner)).join('')
     : '<div style="color:var(--muted);font-size:13.5px">Todavía no ha subido ninguna ruta.</div>';
 
   stateMsg.style.display = 'none';
