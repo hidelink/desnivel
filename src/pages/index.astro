@@ -125,11 +125,11 @@ header{
 .toast-success{border-left-color:var(--flat);}
 
 /* ── LOGIN MODAL ────────────────────────────────────────── */
-#login-overlay, #onboarding-overlay{
+#login-overlay, #onboarding-overlay, #route-rename-overlay{
   display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);
   z-index:2000;align-items:center;justify-content:center;padding:20px;
 }
-#login-overlay.show, #onboarding-overlay.show{display:flex;}
+#login-overlay.show, #onboarding-overlay.show, #route-rename-overlay.show{display:flex;}
 .ob-swatch{width:22px;height:22px;border-radius:50%;cursor:pointer;border:2px solid transparent;}
 .ob-swatch.selected{border-color:var(--text);}
 .login-card{
@@ -225,6 +225,11 @@ header{
 .route-card-left{display:flex;flex-direction:column;gap:4px;}
 .route-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;}
 .route-title{font-size:21px;font-weight:800;letter-spacing:-.3px;}
+.rename-route-btn{
+  width:26px;height:26px;border-radius:7px;background:none;border:1px solid var(--border2);
+  color:var(--muted);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;
+}
+.rename-route-btn:hover{border-color:var(--muted2);color:var(--text);}
 .route-meta{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
 .rbadge{
   font-size:11px;font-weight:700;padding:3px 9px;border-radius:5px;letter-spacing:.4px;
@@ -713,6 +718,20 @@ footer{
   </div>
 </div>
 
+<!-- ROUTE RENAME MODAL -->
+<div id="route-rename-overlay" onclick="if(event.target===this) closeRouteRenameModal()">
+  <div class="login-card" style="width:380px;">
+    <div class="login-field">
+      <label for="route-rename-input">Nombre de la ruta</label>
+      <input id="route-rename-input" type="text" maxlength="120">
+    </div>
+    <div class="login-actions">
+      <button class="secondary" onclick="closeRouteRenameModal()">Cancelar</button>
+      <button class="primary" onclick="saveRouteRename()">Guardar</button>
+    </div>
+  </div>
+</div>
+
 <!-- HEADER -->
 <header>
   <a class="logo" href="/">
@@ -790,7 +809,12 @@ footer{
   <div class="route-card">
     <div class="route-card-left">
       <span class="route-label">Ruta cargada</span>
-      <span class="route-title" id="route-name-text">—</span>
+      <div style="display:flex;align-items:center;gap:8px">
+        <span class="route-title" id="route-name-text">—</span>
+        <button type="button" class="rename-route-btn" title="Renombrar" onclick="openRouteRenameModal()">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
+        </button>
+      </div>
       <div class="route-meta">
         <span class="rbadge rbadge-gpx">GPX</span>
         <span class="rbadge diff-badge" id="diff-badge">—</span>
@@ -1232,6 +1256,9 @@ document.addEventListener('DOMContentLoaded', () => {
     clearTimeout(obUsernameCheckTimer);
     obUsernameCheckTimer = setTimeout(checkUsernameAvailability, 400);
   });
+  document.getElementById('route-rename-input')?.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') saveRouteRename();
+  });
 });
 
 function normalizeUsername(raw){
@@ -1531,6 +1558,44 @@ function buildRoutePlan(){
       diffLabel: document.getElementById('diff-badge').textContent
     }
   };
+}
+
+// Renaming here just edits the DOM text when the route hasn't been saved
+// anywhere yet (buildRoutePlan() reads it live at save time either way).
+// If it's already saved (currentShareId set — auto-saved, shared, or
+// opened via a share link), it also tries to persist the new name;
+// RLS silently blocks that for a route that isn't this user's, which is
+// the right outcome, just reported back as a toast instead of a hard error.
+function openRouteRenameModal(){
+  const current = document.getElementById('route-name-text').textContent.trim();
+  const input = document.getElementById('route-rename-input');
+  input.value = current === '—' ? '' : current;
+  document.getElementById('route-rename-overlay').classList.add('show');
+  input.focus();
+  input.select();
+}
+
+function closeRouteRenameModal(){
+  document.getElementById('route-rename-overlay').classList.remove('show');
+}
+
+async function saveRouteRename(){
+  const name = document.getElementById('route-rename-input').value.trim();
+  if (!name) { showToast('El nombre no puede estar vacío.'); return; }
+  document.getElementById('route-name-text').textContent = name;
+  closeRouteRenameModal();
+
+  if (!currentShareId || !supabaseClient) return;
+  const { data: row, error: fetchErr } = await supabaseClient
+    .from('routes').select('plan').eq('id', currentShareId).maybeSingle();
+  if (fetchErr || !row) return;
+  // RLS blocking this (not the owner) doesn't error — it just silently
+  // matches zero rows — so .select() here to tell "saved" from "no-op".
+  const { data, error } = await supabaseClient
+    .from('routes').update({ plan: { ...row.plan, name } }).eq('id', currentShareId).select();
+  if (error || !data || data.length === 0) {
+    showToast('El nombre cambió aquí, pero no se pudo guardar: solo el dueño de esta ruta puede editarla.');
+  }
 }
 
 // Reconstructs a route (map, stats, calculator) from a plan fetched via a
