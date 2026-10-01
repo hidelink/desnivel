@@ -104,6 +104,16 @@ h1{font-size:20px;font-weight:800;margin-bottom:22px;}
 .primary:hover{background:var(--orange2);}
 .secondary{background:#fff;border:1px solid var(--border2);color:var(--text);}
 
+.section-title{font-size:14px;font-weight:800;}
+.section-sub{font-size:12px;color:var(--muted);margin-top:2px;}
+.pace-row{display:flex;align-items:center;gap:6px;}
+.pace-row input{width:56px;text-align:center;background:var(--bg);border:1px solid var(--border2);border-radius:8px;padding:10px 4px;font-size:14px;color:var(--text);}
+.pace-row span{font-size:14px;color:var(--muted2);font-weight:700;}
+.pace-row .pace-unit{font-size:12px;color:var(--muted);font-weight:600;margin-left:4px;}
+.rating-pills{display:flex;gap:6px;}
+.rating-pill{flex:1;text-align:center;padding:9px 6px;border:1px solid var(--border2);border-radius:8px;font-size:11.5px;font-weight:600;color:var(--muted);cursor:pointer;background:var(--bg);}
+.rating-pill.selected{border-color:var(--orange);color:var(--orange);background:rgba(232,101,10,.08);}
+
 /* ── TOAST (replaces native alert) ─────────────────────────
    Dark regardless of page theme, same convention as other floating
    chip UI — avoids looking like a browser dialog. */
@@ -204,6 +214,38 @@ h1{font-size:20px;font-weight:800;margin-bottom:22px;}
         <button type="button" class="primary" onclick="saveProfile()">Guardar cambios</button>
       </div>
     </div>
+
+    <div class="card" style="margin-top:16px">
+      <div>
+        <div class="section-title">Ritmo personalizado</div>
+        <div class="section-sub">Opcional — ajusta el "Tiempo estimado" y la calculadora de carrera a tu ritmo real, en vez de un promedio genérico.</div>
+      </div>
+      <div class="field">
+        <label>Ritmo en plano</label>
+        <div class="pace-row">
+          <input id="ep-pace-min" type="number" min="3" max="15" placeholder="6">
+          <span>:</span>
+          <input id="ep-pace-sec" type="number" min="0" max="59" placeholder="00">
+          <span class="pace-unit">min/km</span>
+        </div>
+      </div>
+      <div class="field">
+        <label>Subidas</label>
+        <div class="rating-pills" id="ep-uphill-pills" data-field="uphill">
+          <div class="rating-pill" data-value="dificil">Se me dificulta</div>
+          <div class="rating-pill" data-value="normal">Normal</div>
+          <div class="rating-pill" data-value="bueno">Se me da bien</div>
+        </div>
+      </div>
+      <div class="field">
+        <label>Bajadas</label>
+        <div class="rating-pills" id="ep-downhill-pills" data-field="downhill">
+          <div class="rating-pill" data-value="dificil">Se me dificulta</div>
+          <div class="rating-pill" data-value="normal">Normal</div>
+          <div class="rating-pill" data-value="bueno">Se me da bien</div>
+        </div>
+      </div>
+    </div>
   </div>
 </main>
 
@@ -250,6 +292,14 @@ let epUserId = null;
 let epUsernameCheckTimer = null;
 
 let epAvatarUrl = null;
+let epUphillRating = null;
+let epDownhillRating = null;
+
+function setRating(field, value){
+  if (field === 'uphill') epUphillRating = value; else epDownhillRating = value;
+  const container = document.getElementById(field === 'uphill' ? 'ep-uphill-pills' : 'ep-downhill-pills');
+  container.querySelectorAll('.rating-pill').forEach(el => el.classList.toggle('selected', el.dataset.value === value));
+}
 
 function setColor(color){
   epSelectedColor = color;
@@ -389,9 +439,24 @@ async function saveProfile(){
     showToast('Ese usuario está reservado. Elige otro.');
     return;
   }
+
+  const minRaw = document.getElementById('ep-pace-min').value.trim();
+  const secRaw = document.getElementById('ep-pace-sec').value.trim();
+  let paceFlatSec = null;
+  if (minRaw || secRaw) {
+    paceFlatSec = (parseInt(minRaw, 10) || 0) * 60 + (parseInt(secRaw, 10) || 0);
+    if (paceFlatSec < 180 || paceFlatSec > 900) {
+      showToast('El ritmo en plano debe estar entre 3:00 y 15:00 min/km.');
+      return;
+    }
+  }
+
   const { error } = await supabaseClient
     .from('profiles')
-    .update({ username, display_name: displayName, avatar_color: epSelectedColor, avatar_url: epAvatarUrl })
+    .update({
+      username, display_name: displayName, avatar_color: epSelectedColor, avatar_url: epAvatarUrl,
+      pace_flat_sec_per_km: paceFlatSec, pace_uphill_rating: epUphillRating, pace_downhill_rating: epDownhillRating,
+    })
     .eq('id', epUserId);
   if (error) {
     if (error.code === '23505') {
@@ -416,7 +481,7 @@ async function init(){
 
   const { data: profile, error } = await supabaseClient
     .from('profiles')
-    .select('username, display_name, avatar_color, avatar_url')
+    .select('username, display_name, avatar_color, avatar_url, pace_flat_sec_per_km, pace_uphill_rating, pace_downhill_rating')
     .eq('id', epUserId)
     .maybeSingle();
 
@@ -431,12 +496,27 @@ async function init(){
   epAvatarUrl = profile.avatar_url;
   setColor(profile.avatar_color);
 
+  if (profile.pace_flat_sec_per_km) {
+    document.getElementById('ep-pace-min').value = Math.floor(profile.pace_flat_sec_per_km / 60);
+    document.getElementById('ep-pace-sec').value = String(profile.pace_flat_sec_per_km % 60).padStart(2, '0');
+  }
+  if (profile.pace_uphill_rating) setRating('uphill', profile.pace_uphill_rating);
+  if (profile.pace_downhill_rating) setRating('downhill', profile.pace_downhill_rating);
+
   document.getElementById('ep-color-swatches').addEventListener('click', (e) => {
     const swatch = e.target.closest('.swatch');
     if (swatch) setColor(swatch.dataset.color);
   });
   document.getElementById('ep-photo-input').addEventListener('change', (e) => {
     handleAvatarPhotoSelect(e.target.files[0]);
+  });
+  document.getElementById('ep-uphill-pills').addEventListener('click', (e) => {
+    const pill = e.target.closest('.rating-pill');
+    if (pill) setRating('uphill', pill.dataset.value);
+  });
+  document.getElementById('ep-downhill-pills').addEventListener('click', (e) => {
+    const pill = e.target.closest('.rating-pill');
+    if (pill) setRating('downhill', pill.dataset.value);
   });
   document.getElementById('ep-username').addEventListener('input', () => {
     clearTimeout(epUsernameCheckTimer);

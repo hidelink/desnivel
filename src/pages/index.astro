@@ -1204,6 +1204,7 @@ async function renderAuthState(session){
     loggedOut.style.display = 'flex';
     loggedIn.style.display = 'none';
     closeOnboardingModal();
+    paceProfile = { flatSec: null, uphill: null, downhill: null };
     return;
   }
   loggedOut.style.display = 'none';
@@ -1214,7 +1215,7 @@ async function renderAuthState(session){
 
   const { data: profile } = await supabaseClient
     .from('profiles')
-    .select('username, avatar_color, avatar_url')
+    .select('username, avatar_color, avatar_url, pace_flat_sec_per_km, pace_uphill_rating, pace_downhill_rating')
     .eq('id', session.user.id)
     .maybeSingle();
 
@@ -1223,6 +1224,11 @@ async function renderAuthState(session){
     document.getElementById('auth-email').textContent = '@' + profile.username;
     document.getElementById('auth-chip-link').href = '/' + profile.username;
     closeOnboardingModal();
+    paceProfile = {
+      flatSec: profile.pace_flat_sec_per_km || null,
+      uphill: profile.pace_uphill_rating || null,
+      downhill: profile.pace_downhill_rating || null,
+    };
   } else {
     openOnboardingModal(session.user);
   }
@@ -1357,6 +1363,11 @@ async function completeOnboarding(){
 // ── STATE ──────────────────────────────────────────────────
 let gpxPoints = [], cumDistKm = [];
 let checkpoints = []; // { km, label, cutoffSec|null }
+// Optional personalized pace, loaded from the logged-in user's profile (see
+// renderAuthState). All null means "behave exactly like an anonymous
+// visitor" — the flat 360 sec/km default and no uphill/downhill adjustment.
+let paceProfile = { flatSec: null, uphill: null, downhill: null };
+const PACE_RATING_MULT = { dificil: 1.12, normal: 1.0, bueno: 0.92 };
 let currentGpxText = null, currentFilename = null;
 // Set when the loaded route already has a canonical share link — either it
 // was opened via one, or it was shared earlier this session. Re-sharing
@@ -1508,12 +1519,16 @@ function processGPX(xml, filename) {
   const avgEle = gpxPoints.reduce((s,p)=>s+p.ele,0)/gpxPoints.length;
 
   // Suggested time for average trained trail runner
-  // Base pace: 6:00/km (360 sec/km) on flat terrain at sea level
-  // Effort km = dist + D+/100 + D-/200 (ITRA-derived)
+  // Base pace: the user's own flat-pace if set, else 6:00/km (360 sec/km)
+  // Effort km = dist + D+/100 + D-/200 (ITRA-derived), nudged by the user's
+  // uphill/downhill self-rating if set
   // Altitude factor applied on top
-  const effortKm   = totalKm + gain/100 + loss/200;
+  const upMult     = paceProfile.uphill ? PACE_RATING_MULT[paceProfile.uphill] : 1.0;
+  const downMult   = paceProfile.downhill ? PACE_RATING_MULT[paceProfile.downhill] : 1.0;
+  const effortKm   = totalKm + (gain/100)*upMult + (loss/200)*downMult;
   const routeAltF  = altFactor(avgEle);
-  const suggestedS = effortKm * 360 * routeAltF;
+  const flatPaceS  = paceProfile.flatSec || 360;
+  const suggestedS = effortKm * flatPaceS * routeAltF;
 
   // Update UI
   document.getElementById('route-name-text').textContent = name || filename || 'Mi Ruta';
@@ -2090,9 +2105,13 @@ function altFactor(ele){
   return 1 + Math.max(0, ele - 1500) * 0.00012;
 }
 
-// Combined multiplier: grade × altitude
+// Combined multiplier: grade × altitude, nudged by the user's own
+// uphill/downhill self-rating if they've set one (see paceProfile).
 function segMult(grade, avgEle){
-  return gradeMult(grade) * altFactor(avgEle);
+  let m = gradeMult(grade) * altFactor(avgEle);
+  if (grade > .04 && paceProfile.uphill) m *= PACE_RATING_MULT[paceProfile.uphill];
+  else if (grade < -.04 && paceProfile.downhill) m *= PACE_RATING_MULT[paceProfile.downhill];
+  return m;
 }
 function terrainInfo(g){
   if(g>.08)  return['Subida fuerte','t-up-hard','#c0392b'];

@@ -124,3 +124,19 @@ create policy "avatar_owner_update" on storage.objects
 create policy "avatar_owner_delete" on storage.objects
   for delete
   using (bucket_id = 'avatars' and auth.uid()::text = (storage.foldername(name))[1]);
+
+-- Optional personal pace profile, used to replace the flat 360 sec/km
+-- (6:00/km) assumption in the "Tiempo estimado" stat and to nudge the
+-- grade-based effort multiplier in the race calculator. All three null
+-- means "behave exactly as before" — nothing here changes anything for a
+-- user (or anonymous visitor) who never sets it.
+alter table profiles add column if not exists pace_flat_sec_per_km integer;
+alter table profiles add column if not exists pace_uphill_rating text;
+alter table profiles add column if not exists pace_downhill_rating text;
+
+alter table profiles add constraint pace_flat_sane
+  check (pace_flat_sec_per_km is null or pace_flat_sec_per_km between 180 and 900);
+alter table profiles add constraint pace_uphill_rating_valid
+  check (pace_uphill_rating is null or pace_uphill_rating in ('dificil','normal','bueno'));
+alter table profiles add constraint pace_downhill_rating_valid
+  check (pace_downhill_rating is null or pace_downhill_rating in ('dificil','normal','bueno'));
