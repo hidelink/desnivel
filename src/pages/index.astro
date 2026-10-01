@@ -598,6 +598,15 @@ footer{
   #map{height:360px;}
   .stats-grid{grid-template-columns:repeat(2,1fr);}
   .route-card{flex-direction:column;align-items:flex-start;}
+  /* Header has to fit logo + upload + login/chip in ~340px of usable
+     width — icon-only upload button and a tighter, truncating chip. */
+  .header-right{gap:6px;}
+  .upload-btn .btn-label{display:none;}
+  .upload-btn{padding:9px 10px;}
+  .login-btn{padding:8px 10px;font-size:12px;white-space:nowrap;}
+  .auth-chip{padding:4px 8px 4px 4px;}
+  #auth-email{max-width:80px;}
+  .logout-btn{padding:8px 10px;font-size:11.5px;}
 }
 
 /* ── COUNTER ANIMATION ──────────────────────────────────── */
@@ -711,7 +720,7 @@ footer{
     </a>
     <button class="upload-btn" onclick="document.getElementById('file-input').click()">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-      Subir GPX
+      <span class="btn-label">Subir GPX</span>
     </button>
     <div id="auth-logged-out" style="display:flex;align-items:center">
       <button class="login-btn" onclick="openLoginModal()">Iniciar sesión</button>

@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import { randomUUID } from 'node:crypto';
+import { XMLParser } from 'fast-xml-parser';
 
 // Public, no-auth endpoint: anyone with the app can create a shared route.
 // Kept simple on purpose — a size cap is the only abuse guard for now.
@@ -71,7 +72,9 @@ export default async (req) => {
   const suffix = randomUUID().replace(/-/g, '').slice(0, 6);
   const id = `${slug}-${suffix}`;
 
-  const { error } = await supabase.from('routes').insert({ id, plan, user_id: userId });
+  const location = await geocodeFirstPoint(plan.gpx);
+
+  const { error } = await supabase.from('routes').insert({ id, plan, user_id: userId, location });
   if (error) {
     return json({ error: 'No se pudo guardar la ruta para compartir' }, 500);
   }
@@ -91,6 +94,64 @@ function slugify(text) {
     .replace(/^-+|-+$/g, '')
     .slice(0, 40)
     .replace(/-+$/, '');
+}
+
+// First point of the track (trkpt, falling back to rtept/wpt like the
+// client's own parser) — just enough to place the route on a map for
+// geocoding, not a full parse.
+function firstGpxPoint(gpx) {
+  try {
+    const parser = new XMLParser({ ignoreAttributes: false, attributeNamePrefix: '' });
+    const doc = parser.parse(gpx);
+    const root = doc?.gpx;
+    if (!root) return null;
+    const toArray = (v) => (v === undefined || v === null ? [] : Array.isArray(v) ? v : [v]);
+    for (const trk of toArray(root.trk)) {
+      for (const seg of toArray(trk.trkseg)) {
+        for (const p of toArray(seg.trkpt)) {
+          const lat = Number(p.lat), lon = Number(p.lon);
+          if (Number.isFinite(lat) && Number.isFinite(lon)) return { lat, lon };
+        }
+      }
+    }
+    for (const p of toArray(root.rte?.rtept)) {
+      const lat = Number(p.lat), lon = Number(p.lon);
+      if (Number.isFinite(lat) && Number.isFinite(lon)) return { lat, lon };
+    }
+    for (const p of toArray(root.wpt)) {
+      const lat = Number(p.lat), lon = Number(p.lon);
+      if (Number.isFinite(lat) && Number.isFinite(lon)) return { lat, lon };
+    }
+  } catch {
+    // malformed GPX — the client already validated this before upload, so
+    // this is just a defensive fallback.
+  }
+  return null;
+}
+
+// "Ciudad, País" via Nominatim (OpenStreetMap) — free, no API key, but their
+// usage policy asks for an identifying User-Agent and caps at ~1 req/sec,
+// both fine here since this runs once per save, not per page view. Best
+// effort: a saved route is never blocked on this, and a failure just means
+// no location tag instead of a broken save.
+async function geocodeFirstPoint(gpx) {
+  const point = firstGpxPoint(gpx);
+  if (!point) return null;
+  try {
+    const url = `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${point.lat}&lon=${point.lon}&zoom=10&accept-language=es`;
+    const res = await fetch(url, {
+      headers: { 'User-Agent': 'Desnivel/1.0 (https://desnivel.run)' },
+      signal: AbortSignal.timeout(4000),
+    });
+    if (!res.ok) return null;
+    const data = await res.json();
+    const addr = data.address || {};
+    const locality = addr.city || addr.town || addr.village || addr.municipality || addr.county || addr.state;
+    if (!locality) return null;
+    return addr.country ? `${locality}, ${addr.country}` : locality;
+  } catch {
+    return null;
+  }
 }
 
 function json(data, status = 200) {

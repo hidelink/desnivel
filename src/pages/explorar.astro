@@ -39,8 +39,15 @@ header{
 .logo{display:flex;align-items:center;gap:10px;}
 .logo-text{font-size:17px;font-weight:800;letter-spacing:-.4px;color:var(--text);}
 .logo-text span{color:var(--orange);}
-.nav-link{font-size:13px;font-weight:600;color:var(--muted);}
+.nav-link{font-size:13px;font-weight:600;color:var(--muted);white-space:nowrap;}
 .nav-link.active{color:var(--orange);font-weight:700;}
+.header-nav{display:flex;align-items:center;gap:22px;}
+@media(max-width:480px){
+  header{padding:12px 16px;gap:8px;}
+  .logo-text{font-size:15px;}
+  .header-nav{gap:12px;}
+  .nav-link{font-size:12px;}
+}
 main{max-width:1200px;margin:0 auto;padding:40px 24px 80px;}
 h1{font-size:26px;font-weight:800;color:var(--text);letter-spacing:-.4px;margin-bottom:6px;}
 .subtitle{font-size:14px;color:var(--muted);margin-bottom:28px;}
@@ -56,6 +63,7 @@ h1{font-size:26px;font-weight:800;color:var(--text);letter-spacing:-.4px;margin-
   display:flex;align-items:center;justify-content:center;flex-shrink:0;
 }
 .route-card-name{font-size:15px;font-weight:700;color:var(--text);}
+.route-card-location{display:flex;align-items:center;gap:4px;font-size:12px;color:var(--muted);margin-top:-4px;}
 .route-card-stats{display:flex;gap:14px;font-size:12.5px;color:var(--muted);}
 .route-card-stats b{color:var(--text);}
 .diff-pill{font-size:10.5px;font-weight:700;padding:3px 9px;border-radius:20px;width:fit-content;}
@@ -73,7 +81,7 @@ h1{font-size:26px;font-weight:800;color:var(--text);letter-spacing:-.4px;margin-
     </svg>
     <span class="logo-text">Desni<span>vel</span></span>
   </a>
-  <nav style="display:flex;align-items:center;gap:22px">
+  <nav class="header-nav">
     <a class="nav-link active" href="/explorar">Explorar</a>
     <a class="nav-link" href="/">Analizador</a>
     <a class="nav-link" id="nav-my-profile" href="/" style="display:none">Mi perfil</a>
@@ -117,6 +125,11 @@ function routeCardHtml(row, profile){
     <div class="route-card">
       ${owner}
       <div class="route-card-name">${escapeHtml(name)}</div>
+      ${row.location ? `
+      <div class="route-card-location">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+        ${escapeHtml(row.location)}
+      </div>` : ''}
       <div class="route-card-stats">
         <span><b>${escapeHtml(summary.dist || '—')}</b></span>
         <span>↑ <b>${escapeHtml(summary.gain || '—')}</b></span>
@@ -143,7 +156,7 @@ async function loadFeed(){
 
   const { data: routes, error } = await supabaseClient
     .from('routes')
-    .select('id, user_id, plan, created_at')
+    .select('id, user_id, plan, location, created_at')
     .eq('is_hidden', false)
     .order('created_at', { ascending: false })
     .limit(30);

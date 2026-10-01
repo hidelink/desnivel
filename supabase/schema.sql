@@ -15,6 +15,11 @@ create table if not exists routes (
 
 create index if not exists routes_user_id_idx on routes (user_id);
 
+-- "Ciudad, País" derived once at save time from the route's first GPS
+-- point (see save-route.mjs) — never recomputed on read, so showing it on
+-- a card or feed costs nothing.
+alter table routes add column if not exists location text;
+
 alter table routes enable row level security;
 
 -- Anyone can read a route that isn't hidden (covers anonymous share links,
