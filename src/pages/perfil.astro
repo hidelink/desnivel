@@ -278,9 +278,9 @@ async function renderHeaderAuth(session){
   const email = session.user.email || '';
   document.getElementById('auth-avatar').textContent = (email[0] || '?').toUpperCase();
   document.getElementById('auth-email').textContent = email;
-  const { data: profile } = await supabaseClient.from('profiles').select('username, avatar_color').eq('id', session.user.id).maybeSingle();
+  const { data: profile } = await supabaseClient.from('profiles').select('username, avatar_color, avatar_url').eq('id', session.user.id).maybeSingle();
   if (profile) {
-    document.getElementById('auth-avatar').style.background = profile.avatar_color;
+    applyAvatar(document.getElementById('auth-avatar'), profile.avatar_url, profile.avatar_color, profile.username[0]);
     document.getElementById('auth-email').textContent = '@' + profile.username;
     document.getElementById('auth-chip-link').href = '/' + profile.username;
   }
@@ -303,6 +303,17 @@ function showToast(message, type = 'error'){
     el.classList.remove('show');
     setTimeout(() => el.remove(), 300);
   }, 4200);
+}
+
+// A profile photo (optional) always wins over the color+initial circle.
+function applyAvatar(el, avatarUrl, color, initial){
+  if (avatarUrl) {
+    el.style.background = `center/cover no-repeat url('${avatarUrl}')`;
+    el.textContent = '';
+  } else {
+    el.style.background = color || '#e8650a';
+    el.textContent = (initial || '?').toUpperCase();
+  }
 }
 
 function showConfirm(message){
@@ -448,7 +459,7 @@ async function loadProfile(){
 
   const { data: profile, error } = await supabaseClient
     .from('profiles')
-    .select('id, username, display_name, avatar_color, created_at')
+    .select('id, username, display_name, avatar_color, avatar_url, created_at')
     .eq('username', username.toLowerCase())
     .maybeSingle();
 
@@ -458,8 +469,7 @@ async function loadProfile(){
   }
 
   document.title = `@${profile.username} · Desnivel`;
-  document.getElementById('p-avatar').textContent = (profile.display_name[0] || profile.username[0] || '?').toUpperCase();
-  document.getElementById('p-avatar').style.background = profile.avatar_color;
+  applyAvatar(document.getElementById('p-avatar'), profile.avatar_url, profile.avatar_color, profile.display_name[0] || profile.username[0]);
   document.getElementById('p-name').textContent = profile.display_name || ('@' + profile.username);
   const year = new Date(profile.created_at).getFullYear();
 

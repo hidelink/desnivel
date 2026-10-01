@@ -162,6 +162,17 @@ h1{font-size:26px;font-weight:800;color:var(--text);letter-spacing:-.4px;margin-
 <script is:inline>
 const supabaseClient = supabase.createClient(window.__SUPABASE_URL__, window.__SUPABASE_ANON_KEY__);
 
+// A profile photo (optional) always wins over the color+initial circle.
+function applyAvatar(el, avatarUrl, color, initial){
+  if (avatarUrl) {
+    el.style.background = `center/cover no-repeat url('${avatarUrl}')`;
+    el.textContent = '';
+  } else {
+    el.style.background = color || '#e8650a';
+    el.textContent = (initial || '?').toUpperCase();
+  }
+}
+
 // Header auth state — same chip/login-button pattern as the home page.
 async function renderHeaderAuth(session){
   const loggedOut = document.getElementById('auth-logged-out');
@@ -171,9 +182,9 @@ async function renderHeaderAuth(session){
   const email = session.user.email || '';
   document.getElementById('auth-avatar').textContent = (email[0] || '?').toUpperCase();
   document.getElementById('auth-email').textContent = email;
-  const { data: profile } = await supabaseClient.from('profiles').select('username, avatar_color').eq('id', session.user.id).maybeSingle();
+  const { data: profile } = await supabaseClient.from('profiles').select('username, avatar_color, avatar_url').eq('id', session.user.id).maybeSingle();
   if (profile) {
-    document.getElementById('auth-avatar').style.background = profile.avatar_color;
+    applyAvatar(document.getElementById('auth-avatar'), profile.avatar_url, profile.avatar_color, profile.username[0]);
     document.getElementById('auth-email').textContent = '@' + profile.username;
     document.getElementById('auth-chip-link').href = '/' + profile.username;
   }
@@ -196,15 +207,23 @@ function escapeHtml(s){
   return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
 
+// Built for a template string rather than a live element (applyAvatar's
+// job elsewhere) — same rule, a photo wins over color+initial.
+function avatarVisual(avatarUrl, color, initial){
+  if (avatarUrl) return { style: `background:center/cover no-repeat url('${avatarUrl}')`, text: '' };
+  return { style: `background:${color || '#e8650a'}`, text: escapeHtml((initial || '?').toUpperCase()) };
+}
+
 function routeCardHtml(row, profile){
   const plan = row.plan || {};
   const summary = plan.summary || {};
   const name = plan.name || plan.filename || 'Ruta sin nombre';
   const diff = summary.diffLabel || '';
   const colors = DIFF_COLORS[diff] || { bg: '#f1f0ec', fg: 'var(--muted)' };
+  const av = profile ? avatarVisual(profile.avatar_url, profile.avatar_color, profile.display_name[0] || profile.username[0]) : null;
   const owner = profile
     ? `<a class="card-owner" href="/${encodeURIComponent(profile.username)}">
-         <div class="card-owner-avatar" style="background:${profile.avatar_color}">${escapeHtml((profile.display_name[0] || profile.username[0] || '?').toUpperCase())}</div>
+         <div class="card-owner-avatar" style="${av.style}">${av.text}</div>
          @${escapeHtml(profile.username)}
        </a>`
     : `<div class="card-owner">Compartido anónimamente</div>`;
@@ -257,7 +276,7 @@ async function loadFeed(){
   if (userIds.length) {
     const { data: profiles } = await supabaseClient
       .from('profiles')
-      .select('id, username, display_name, avatar_color')
+      .select('id, username, display_name, avatar_color, avatar_url')
       .in('id', userIds);
     profileById = Object.fromEntries((profiles || []).map(p => [p.id, p]));
   }

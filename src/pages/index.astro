@@ -1122,6 +1122,19 @@ function showToast(message, type = 'error'){
   }, 4200);
 }
 
+// A profile photo (optional) always wins over the color+initial circle —
+// every avatar on the site (header chip, profile page, Explorar cards)
+// renders through this same rule.
+function applyAvatar(el, avatarUrl, color, initial){
+  if (avatarUrl) {
+    el.style.background = `center/cover no-repeat url('${avatarUrl}')`;
+    el.textContent = '';
+  } else {
+    el.style.background = color || '#e8650a';
+    el.textContent = (initial || '?').toUpperCase();
+  }
+}
+
 // ── AUTH (Supabase) ────────────────────────────────────────
 // Guarded: a missing/misconfigured key must not take down the rest of the
 // page (the GPX analyzer has nothing to do with login) — createClient
@@ -1206,12 +1219,12 @@ async function renderAuthState(session){
 
   const { data: profile } = await supabaseClient
     .from('profiles')
-    .select('username, avatar_color')
+    .select('username, avatar_color, avatar_url')
     .eq('id', session.user.id)
     .maybeSingle();
 
   if (profile) {
-    document.getElementById('auth-avatar').style.background = profile.avatar_color;
+    applyAvatar(document.getElementById('auth-avatar'), profile.avatar_url, profile.avatar_color, profile.username[0]);
     document.getElementById('auth-email').textContent = '@' + profile.username;
     document.getElementById('auth-chip-link').href = '/' + profile.username;
     closeOnboardingModal();

@@ -96,3 +96,31 @@ create policy "profiles_owner_insert" on profiles
 create policy "profiles_owner_update" on profiles
   for update
   using (auth.uid() = id);
+
+-- Optional profile photo — null means "use avatar_color + initial" (the
+-- existing fallback everywhere an avatar renders).
+alter table profiles add column if not exists avatar_url text;
+
+-- Storage bucket for profile photos. Each file lives at
+-- avatars/<user_id>/avatar.jpg (fixed name, upsert on re-upload — no old
+-- files to clean up), so the owner check is just "the first path segment
+-- is my own user id".
+insert into storage.buckets (id, name, public)
+values ('avatars', 'avatars', true)
+on conflict (id) do nothing;
+
+create policy "avatar_public_read" on storage.objects
+  for select
+  using (bucket_id = 'avatars');
+
+create policy "avatar_owner_insert" on storage.objects
+  for insert
+  with check (bucket_id = 'avatars' and auth.uid()::text = (storage.foldername(name))[1]);
+
+create policy "avatar_owner_update" on storage.objects
+  for update
+  using (bucket_id = 'avatars' and auth.uid()::text = (storage.foldername(name))[1]);
+
+create policy "avatar_owner_delete" on storage.objects
+  for delete
+  using (bucket_id = 'avatars' and auth.uid()::text = (storage.foldername(name))[1]);

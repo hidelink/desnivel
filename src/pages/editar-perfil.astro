@@ -86,6 +86,18 @@ h1{font-size:20px;font-weight:800;margin-bottom:22px;}
 .swatch{width:22px;height:22px;border-radius:50%;cursor:pointer;border:2px solid transparent;}
 .swatch.selected{border-color:var(--text);}
 .avatar-preview{width:48px;height:48px;border-radius:50%;color:#fff;font-size:18px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.avatar-wrap{position:relative;flex-shrink:0;}
+.avatar-edit-btn{
+  position:absolute;bottom:-2px;right:-2px;width:22px;height:22px;border-radius:50%;
+  background:var(--s1);border:1px solid var(--border2);color:var(--muted);
+  display:flex;align-items:center;justify-content:center;cursor:pointer;
+}
+.avatar-edit-btn:hover{border-color:var(--orange);color:var(--orange);}
+.remove-photo-btn{
+  background:none;border:none;color:var(--muted);font-size:12px;font-weight:600;
+  cursor:pointer;text-decoration:underline;text-align:left;padding:0;width:fit-content;
+}
+.remove-photo-btn:hover{color:var(--up2);}
 .actions{display:flex;gap:10px;}
 .actions a, .actions button{flex:1;padding:11px;border-radius:9px;font-size:13px;font-weight:700;cursor:pointer;border:none;text-align:center;}
 .primary{background:var(--orange);color:#fff;}
@@ -157,13 +169,22 @@ h1{font-size:20px;font-weight:800;margin-bottom:22px;}
     <h1>Editar perfil</h1>
     <div class="card">
       <div style="display:flex;align-items:center;gap:14px">
-        <div class="avatar-preview" id="ep-avatar-preview">?</div>
-        <div class="swatches" id="ep-color-swatches">
-          <div class="swatch" data-color="#e8650a" style="background:#e8650a"></div>
-          <div class="swatch" data-color="#0d47a1" style="background:#0d47a1"></div>
-          <div class="swatch" data-color="#2f9e44" style="background:#2f9e44"></div>
-          <div class="swatch" data-color="#8e44ad" style="background:#8e44ad"></div>
-          <div class="swatch" data-color="#c0392b" style="background:#c0392b"></div>
+        <div class="avatar-wrap">
+          <div class="avatar-preview" id="ep-avatar-preview">?</div>
+          <button type="button" class="avatar-edit-btn" onclick="document.getElementById('ep-photo-input').click()" title="Cambiar foto">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+          </button>
+          <input type="file" id="ep-photo-input" accept="image/jpeg,image/png,image/webp" style="display:none">
+        </div>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div class="swatches" id="ep-color-swatches">
+            <div class="swatch" data-color="#e8650a" style="background:#e8650a"></div>
+            <div class="swatch" data-color="#0d47a1" style="background:#0d47a1"></div>
+            <div class="swatch" data-color="#2f9e44" style="background:#2f9e44"></div>
+            <div class="swatch" data-color="#8e44ad" style="background:#8e44ad"></div>
+            <div class="swatch" data-color="#c0392b" style="background:#c0392b"></div>
+          </div>
+          <button type="button" class="remove-photo-btn" id="ep-remove-photo-btn" style="display:none" onclick="removeAvatarPhoto()">Quitar foto</button>
         </div>
       </div>
       <div class="field">
@@ -228,10 +249,92 @@ let epSelectedColor = '#e8650a';
 let epUserId = null;
 let epUsernameCheckTimer = null;
 
+let epAvatarUrl = null;
+
 function setColor(color){
   epSelectedColor = color;
-  document.getElementById('ep-avatar-preview').style.background = color;
   document.querySelectorAll('.swatch').forEach(el => el.classList.toggle('selected', el.dataset.color === color));
+  updateAvatarPreviewUI();
+}
+
+// A photo takes priority over the color+initial circle wherever an avatar
+// renders — the swatches only matter again once there's no photo, so they
+// hide instead of sitting there looking like they do nothing.
+function updateAvatarPreviewUI(){
+  const el = document.getElementById('ep-avatar-preview');
+  const swatches = document.getElementById('ep-color-swatches');
+  const removeBtn = document.getElementById('ep-remove-photo-btn');
+  if (epAvatarUrl) {
+    el.style.background = `center/cover no-repeat url('${epAvatarUrl}')`;
+    el.textContent = '';
+    swatches.style.display = 'none';
+    removeBtn.style.display = 'block';
+  } else {
+    el.style.background = epSelectedColor;
+    const name = document.getElementById('ep-name').value.trim();
+    const username = document.getElementById('ep-username').value.trim();
+    el.textContent = (name[0] || username[0] || '?').toUpperCase();
+    swatches.style.display = 'flex';
+    removeBtn.style.display = 'none';
+  }
+}
+
+function removeAvatarPhoto(){
+  epAvatarUrl = null;
+  updateAvatarPreviewUI();
+}
+
+// Downscale + center-crop to a square before upload — a phone photo
+// straight out of the camera can be 5-10MB and isn't square, neither of
+// which anything here needs.
+function resizeImageToSquare(file, size){
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = size; canvas.height = size;
+        const ctx = canvas.getContext('2d');
+        const minSide = Math.min(img.width, img.height);
+        const sx = (img.width - minSide) / 2;
+        const sy = (img.height - minSide) / 2;
+        ctx.drawImage(img, sx, sy, minSide, minSide, 0, 0, size, size);
+        canvas.toBlob((blob) => blob ? resolve(blob) : reject(new Error('No se pudo procesar la imagen.')), 'image/jpeg', 0.85);
+      };
+      img.onerror = () => reject(new Error('No se pudo leer la imagen.'));
+      img.src = e.target.result;
+    };
+    reader.onerror = () => reject(new Error('No se pudo leer el archivo.'));
+    reader.readAsDataURL(file);
+  });
+}
+
+async function handleAvatarPhotoSelect(file){
+  if (!file) return;
+  if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+    showToast('Usa una imagen JPG, PNG o WEBP.');
+    return;
+  }
+  if (file.size > 8 * 1024 * 1024) {
+    showToast('La imagen es muy pesada (máx 8MB).');
+    return;
+  }
+  try {
+    const blob = await resizeImageToSquare(file, 320);
+    const path = `${epUserId}/avatar.jpg`;
+    const { error: uploadError } = await supabaseClient.storage
+      .from('avatars')
+      .upload(path, blob, { contentType: 'image/jpeg', upsert: true });
+    if (uploadError) throw uploadError;
+    const { data: urlData } = supabaseClient.storage.from('avatars').getPublicUrl(path);
+    // Same path every time (upsert) — a fresh timestamp is what actually
+    // busts other viewers' cached copy of the old photo.
+    epAvatarUrl = urlData.publicUrl + '?t=' + Date.now();
+    updateAvatarPreviewUI();
+  } catch (err) {
+    showToast('No se pudo subir la foto: ' + err.message);
+  }
 }
 
 function normalizeUsername(raw){
@@ -288,7 +391,7 @@ async function saveProfile(){
   }
   const { error } = await supabaseClient
     .from('profiles')
-    .update({ username, display_name: displayName, avatar_color: epSelectedColor })
+    .update({ username, display_name: displayName, avatar_color: epSelectedColor, avatar_url: epAvatarUrl })
     .eq('id', epUserId);
   if (error) {
     if (error.code === '23505') {
@@ -313,7 +416,7 @@ async function init(){
 
   const { data: profile, error } = await supabaseClient
     .from('profiles')
-    .select('username, display_name, avatar_color')
+    .select('username, display_name, avatar_color, avatar_url')
     .eq('id', epUserId)
     .maybeSingle();
 
@@ -325,12 +428,15 @@ async function init(){
   document.getElementById('ep-name').value = profile.display_name || '';
   document.getElementById('ep-username').value = profile.username;
   document.getElementById('cancel-link').href = '/' + profile.username;
-  document.getElementById('ep-avatar-preview').textContent = (profile.display_name[0] || profile.username[0] || '?').toUpperCase();
+  epAvatarUrl = profile.avatar_url;
   setColor(profile.avatar_color);
 
   document.getElementById('ep-color-swatches').addEventListener('click', (e) => {
     const swatch = e.target.closest('.swatch');
     if (swatch) setColor(swatch.dataset.color);
+  });
+  document.getElementById('ep-photo-input').addEventListener('change', (e) => {
+    handleAvatarPhotoSelect(e.target.files[0]);
   });
   document.getElementById('ep-username').addEventListener('input', () => {
     clearTimeout(epUsernameCheckTimer);
