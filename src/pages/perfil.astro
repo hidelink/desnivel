@@ -121,11 +121,11 @@ main{max-width:1000px;margin:0 auto;padding:48px 24px 80px;}
 }
 .toast.show{opacity:1;transform:translateY(0);}
 .toast-error{border-left-color:var(--up2);}
-#confirm-overlay{
+#confirm-overlay, #rename-overlay{
   display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);
   z-index:3600;align-items:center;justify-content:center;padding:20px;
 }
-#confirm-overlay.show{display:flex;}
+#confirm-overlay.show, #rename-overlay.show{display:flex;}
 .confirm-card{
   width:360px;max-width:100%;background:var(--s1);border:1px solid var(--border);
   border-radius:16px;padding:26px;display:flex;flex-direction:column;gap:18px;
@@ -136,8 +136,16 @@ main{max-width:1000px;margin:0 auto;padding:48px 24px 80px;}
   flex:1;padding:10px;border-radius:9px;font-size:13px;font-weight:700;cursor:pointer;border:none;
 }
 .confirm-actions .secondary{background:#fff;border:1px solid var(--border2);color:var(--text);}
+.confirm-actions .primary{background:var(--orange);color:#fff;}
+.confirm-actions .primary:hover{background:var(--orange2);}
 .confirm-actions .danger{background:var(--up2);color:#fff;}
 .confirm-actions .danger:hover{background:#a8311f;}
+.field{display:flex;flex-direction:column;gap:4px;}
+.field label{font-size:12px;font-weight:600;color:var(--muted);}
+.field input{
+  width:100%;background:var(--bg);border:1px solid var(--border2);border-radius:8px;
+  padding:10px 11px;font-size:13px;color:var(--text);
+}
 </style>
 </head>
 <body>
@@ -150,6 +158,19 @@ main{max-width:1000px;margin:0 auto;padding:48px 24px 80px;}
     <div class="confirm-actions">
       <button type="button" class="secondary" id="confirm-cancel-btn">Cancelar</button>
       <button type="button" class="danger" id="confirm-ok-btn">Confirmar</button>
+    </div>
+  </div>
+</div>
+
+<div id="rename-overlay">
+  <div class="confirm-card">
+    <div class="field">
+      <label for="rename-input">Nombre de la ruta</label>
+      <input id="rename-input" type="text" maxlength="120">
+    </div>
+    <div class="confirm-actions">
+      <button type="button" class="secondary" id="rename-cancel-btn">Cancelar</button>
+      <button type="button" class="primary" id="rename-save-btn">Guardar</button>
     </div>
   </div>
 </div>
@@ -241,6 +262,9 @@ function routeCardHtml(row, isOwner){
   const colors = DIFF_COLORS[diff] || { bg: '#f1f0ec', fg: 'var(--muted)' };
   const ownerActions = isOwner ? `
     <div class="card-owner-actions">
+      <button type="button" class="card-icon-btn" title="Renombrar" data-route-id="${row.id}" data-route-name="${escapeHtml(name)}" onclick="openRenameModal(this.dataset.routeId, this.dataset.routeName)">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
+      </button>
       <button type="button" class="card-icon-btn" title="${row.is_hidden ? 'Mostrar' : 'Ocultar'}" onclick="toggleHidden('${row.id}', ${!row.is_hidden})">
         ${row.is_hidden
           ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>'
@@ -288,6 +312,43 @@ async function deleteRoute(routeId){
   if (error) { showToast('No se pudo borrar la ruta: ' + error.message); return; }
   await loadProfile();
 }
+
+let renameRouteId = null;
+
+function openRenameModal(routeId, currentName){
+  renameRouteId = routeId;
+  const input = document.getElementById('rename-input');
+  input.value = currentName;
+  document.getElementById('rename-overlay').classList.add('show');
+  input.focus();
+  input.select();
+}
+
+function closeRenameModal(){
+  document.getElementById('rename-overlay').classList.remove('show');
+  renameRouteId = null;
+}
+
+async function saveRename(){
+  const name = document.getElementById('rename-input').value.trim();
+  if (!name) { showToast('El nombre no puede estar vacío.'); return; }
+  const routeId = renameRouteId;
+  const { data: row, error: fetchErr } = await supabaseClient.from('routes').select('plan').eq('id', routeId).single();
+  if (fetchErr || !row) { showToast('No se pudo renombrar la ruta.'); return; }
+  const updatedPlan = { ...row.plan, name };
+  const { error } = await supabaseClient.from('routes').update({ plan: updatedPlan }).eq('id', routeId);
+  if (error) { showToast('No se pudo renombrar la ruta: ' + error.message); return; }
+  closeRenameModal();
+  await loadProfile();
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('rename-cancel-btn').addEventListener('click', closeRenameModal);
+  document.getElementById('rename-save-btn').addEventListener('click', saveRename);
+  document.getElementById('rename-input').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') saveRename();
+  });
+});
 
 function escapeHtml(s){
   return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
