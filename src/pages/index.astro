@@ -1539,11 +1539,29 @@ function processGPX(xml, filename) {
 }
 
 // ── DOWNLOAD GPX ───────────────────────────────────────────
+// Checkpoints are session-only everywhere else (never saved/shared — see
+// buildRoutePlan), but a personal download is different: the whole point
+// here is to carry them onto the user's own watch. Inserted as plain <wpt>
+// elements right after the opening <gpx> tag — the one part of the GPX
+// schema basically every device (Garmin, COROS, Suunto) reads and shows as
+// named points along the course, without needing a parser to rewrite the
+// rest of the file (keeps everything else byte-for-byte as uploaded).
+function buildGpxWithCheckpoints(){
+  if (!checkpoints.length) return currentGpxText;
+  const wpts = checkpoints.map((cp, i) => {
+    const idx = findPointIndexForKm(cp.km);
+    const pt = gpxPoints[idx];
+    const name = escapeHtml(cp.label || `CP${i+1}`);
+    return `<wpt lat="${pt.lat}" lon="${pt.lon}"><ele>${Math.round(pt.ele)}</ele><name>${name}</name><sym>Flag, Blue</sym></wpt>`;
+  }).join('');
+  return currentGpxText.replace(/(<gpx\b[^>]*>)/i, `$1${wpts}`);
+}
+
 function downloadGpx(){
   if (!gpxPoints.length || !currentGpxText) { showToast('Carga una ruta primero.'); return; }
   const btn = document.getElementById('download-gpx-btn');
   const orig = btn.textContent;
-  const blob = new Blob([currentGpxText], { type:'application/gpx+xml' });
+  const blob = new Blob([buildGpxWithCheckpoints()], { type:'application/gpx+xml' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
