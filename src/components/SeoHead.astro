@@ -15,7 +15,10 @@ const site = Astro.site ?? new URL('https://tu-dominio.example');
 const canonical = new URL(path, site).toString();
 const otherLocale = locale === 'es' ? 'en' : 'es';
 const alternateUrl = alternatePath ? new URL(alternatePath, site).toString() : undefined;
-const image = ogImage ? new URL(ogImage, site).toString() : undefined;
+// Falls back to the generic brand card so a shared link always renders some
+// preview image — pages with a real photo (e.g. a route's hero) still pass
+// their own ogImage and take priority over this.
+const image = new URL(ogImage ?? '/og-image.png', site).toString();
 ---
 
 <title>{title} · Desnivel</title>

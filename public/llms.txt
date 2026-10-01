@@ -1,0 +1,18 @@
+# Desnivel
+
+> Analizador de rutas de trail running: sube un archivo GPX y obtén distancia, desnivel positivo/negativo, altimetría, mapa, checkpoints y una estimación de tiempo. También incluye un archivo editorial de rutas recorridas y documentadas, y perfiles públicos donde los corredores comparten sus rutas.
+
+## Herramienta
+
+- [Analizador de rutas](https://desnivel.run/): sube un archivo GPX y analiza distancia, desnivel, altimetría, mapa, checkpoints y una calculadora de ritmo de carrera.
+- [Explorar](https://desnivel.run/explorar): rutas públicas compartidas por la comunidad, las más recientes primero.
+
+## Archivo editorial
+
+- [Rutas](https://desnivel.run/rutas): crónicas de rutas de trail running, hiking y travesías, cada una recorrida y documentada con datos reales de GPX.
+- [Acerca de](https://desnivel.run/acerca): qué es Desnivel y por qué existe.
+
+## Notas
+
+- El sitio está en español; /en tiene una versión parcial en inglés del archivo editorial.
+- Los perfiles de usuario (desnivel.run/<usuario>) y los links de rutas compartidas (desnivel.run/r/<id>) son contenido dinámico generado por los usuarios, no páginas estáticas.

@@ -19,5 +19,12 @@ export default defineConfig({
       prefixDefaultLocale: false,
     },
   },
-  integrations: [sitemap()],
+  integrations: [
+    sitemap({
+      // /editar-perfil is a private settings page (noindex anyway), and the
+      // bare /perfil is just the template every real /<username> profile
+      // renders into — neither is a URL worth sending a crawler to.
+      filter: (page) => page !== `${SITE_URL}/editar-perfil/` && page !== `${SITE_URL}/perfil/`,
+    }),
+  ],
 });

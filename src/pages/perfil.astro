@@ -24,6 +24,20 @@ const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Perfil · Desnivel</title>
+<meta name="description" content="Rutas de trail running compartidas en Desnivel.">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+
+<meta property="og:type" content="profile">
+<meta property="og:title" content="Perfil · Desnivel">
+<meta property="og:description" content="Rutas de trail running compartidas en Desnivel.">
+<meta property="og:image" content="https://desnivel.run/og-image.png">
+<meta property="og:locale" content="es_MX">
+
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Perfil · Desnivel">
+<meta name="twitter:description" content="Rutas de trail running compartidas en Desnivel.">
+<meta name="twitter:image" content="https://desnivel.run/og-image.png">
+
 <script is:inline src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script is:inline define:vars={{ SUPABASE_URL, SUPABASE_ANON_KEY }}>
   window.__SUPABASE_URL__ = SUPABASE_URL;
@@ -452,10 +466,30 @@ function usernameFromUrl(){
   return new URLSearchParams(location.search).get('u');
 }
 
+// This same static file serves every real profile (via the /:username
+// rewrite) as well as the bare, user-less /perfil template — a search
+// engine can't tell those apart from the raw HTML alone, since the content
+// is only ever filled in here, client-side. So: noindex the bare/dead-end
+// states (nothing meaningful to show), and give a real profile its own
+// canonical URL once we know the username, instead of leaving every
+// profile pointing at the same generic one.
+function setNoIndex(){
+  const meta = document.createElement('meta');
+  meta.name = 'robots';
+  meta.content = 'noindex';
+  document.head.appendChild(meta);
+}
+function setCanonical(url){
+  const link = document.createElement('link');
+  link.rel = 'canonical';
+  link.href = url;
+  document.head.appendChild(link);
+}
+
 async function loadProfile(){
   const username = usernameFromUrl();
   const stateMsg = document.getElementById('state-msg');
-  if (!username) { stateMsg.textContent = 'Perfil no encontrado.'; return; }
+  if (!username) { stateMsg.textContent = 'Perfil no encontrado.'; setNoIndex(); return; }
 
   const { data: profile, error } = await supabaseClient
     .from('profiles')
@@ -465,8 +499,11 @@ async function loadProfile(){
 
   if (error || !profile) {
     stateMsg.textContent = `No encontramos a @${username}.`;
+    setNoIndex();
     return;
   }
+
+  setCanonical(`https://desnivel.run/${profile.username}`);
 
   document.title = `@${profile.username} · Desnivel`;
   applyAvatar(document.getElementById('p-avatar'), profile.avatar_url, profile.avatar_color, profile.display_name[0] || profile.username[0]);
