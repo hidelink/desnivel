@@ -904,6 +904,10 @@ footer{
 let gpxPoints = [], cumDistKm = [];
 let checkpoints = []; // { km, label, cutoffSec|null }
 let currentGpxText = null, currentFilename = null;
+// Set when the loaded route already has a canonical share link — either it
+// was opened via one, or it was shared earlier this session. Re-sharing
+// then just hands back this id instead of minting a duplicate row.
+let currentShareId = null;
 let map = null, elevChart = null;
 let hoverMarker = null, gradeLines = [];
 
@@ -911,6 +915,7 @@ let hoverMarker = null, gradeLines = [];
 function handleFile(file) {
   if (!file || !file.name.toLowerCase().endsWith('.gpx')) return;
   document.getElementById('loading').classList.add('show');
+  currentShareId = null;
   const r = new FileReader();
   r.onload = e => {
     try { processGPX(e.target.result, file.name.replace(/\.gpx$/i,'').replace(/_/g,' ')); }
@@ -1183,6 +1188,18 @@ async function shareCurrentRoute(){
   if (!gpxPoints.length || !currentGpxText) { alert('Carga una ruta primero.'); return; }
   const btn = document.getElementById('share-route-btn');
   const orig = btn.textContent;
+
+  // Already has a canonical link — opened via one, or shared earlier this
+  // session. Hand back that same link instead of creating a duplicate.
+  if (currentShareId) {
+    const url = `${location.origin}${location.pathname}?r=${currentShareId}`;
+    const copied = await copyToClipboard(url);
+    showShareResult(url);
+    btn.textContent = copied ? '✓ Link copiado' : '✓ Link listo';
+    setTimeout(()=>{ btn.textContent = orig; }, 3000);
+    return;
+  }
+
   btn.textContent = 'Subiendo…'; btn.disabled = true;
   try {
     const plan = buildRoutePlan();
@@ -1194,6 +1211,7 @@ async function shareCurrentRoute(){
     });
     const data = await res.json().catch(()=>({}));
     if (!res.ok) throw new Error(data.error || ('Error ' + res.status));
+    currentShareId = data.id;
     const url = `${location.origin}${location.pathname}?r=${data.id}`;
     const copied = await copyToClipboard(url);
     showShareResult(url);
@@ -1223,6 +1241,7 @@ async function shareCurrentRoute(){
     const data = await res.json().catch(()=>({}));
     if (!res.ok) throw new Error(data.error || 'No se encontró esa ruta compartida.');
     applyRoutePlan(data);
+    currentShareId = id;
   } catch (err) {
     alert(err.message);
   } finally {
