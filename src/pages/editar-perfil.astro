@@ -56,9 +56,27 @@ h1{font-size:20px;font-weight:800;margin-bottom:22px;}
 .primary{background:var(--orange);color:#fff;}
 .primary:hover{background:var(--orange2);}
 .secondary{background:#fff;border:1px solid var(--border2);color:var(--text);}
+
+/* ── TOAST (replaces native alert) ─────────────────────────
+   Dark regardless of page theme, same convention as other floating
+   chip UI — avoids looking like a browser dialog. */
+#toast-container{
+  position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:3500;
+  display:flex;flex-direction:column;gap:8px;align-items:center;pointer-events:none;
+  width:100%;padding:0 20px;
+}
+.toast{
+  background:#1e1e1e;color:#f1f1f1;font-size:13px;font-weight:600;line-height:1.4;
+  padding:12px 18px;border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.3);
+  opacity:0;transform:translateY(10px);transition:opacity .25s,transform .25s;
+  max-width:380px;text-align:center;pointer-events:auto;border-left:4px solid var(--up2);
+}
+.toast.show{opacity:1;transform:translateY(0);}
 </style>
 </head>
 <body>
+
+<div id="toast-container"></div>
 
 <header>
   <a class="logo" href="/">
@@ -115,6 +133,19 @@ h1{font-size:20px;font-weight:800;margin-bottom:22px;}
 
 <script is:inline>
 const supabaseClient = supabase.createClient(window.__SUPABASE_URL__, window.__SUPABASE_ANON_KEY__);
+
+function showToast(message){
+  const container = document.getElementById('toast-container');
+  const el = document.createElement('div');
+  el.className = 'toast';
+  el.textContent = message;
+  container.appendChild(el);
+  requestAnimationFrame(() => el.classList.add('show'));
+  setTimeout(() => {
+    el.classList.remove('show');
+    setTimeout(() => el.remove(), 300);
+  }, 4200);
+}
 let epSelectedColor = '#e8650a';
 let epUserId = null;
 let epUsernameCheckTimer = null;
@@ -170,11 +201,11 @@ async function saveProfile(){
   const username = normalizeUsername(document.getElementById('ep-username').value);
   const displayName = document.getElementById('ep-name').value.trim() || username;
   if (!/^[a-z0-9_]{3,20}$/.test(username)) {
-    alert('Usuario inválido: usa minúsculas, números y guion bajo, 3–20 caracteres.');
+    showToast('Usuario inválido: usa minúsculas, números y guion bajo, 3–20 caracteres.');
     return;
   }
   if (RESERVED_USERNAMES.has(username)) {
-    alert('Ese usuario está reservado. Elige otro.');
+    showToast('Ese usuario está reservado. Elige otro.');
     return;
   }
   const { error } = await supabaseClient
@@ -186,7 +217,7 @@ async function saveProfile(){
       document.getElementById('ep-username-status').textContent = 'Ese usuario ya está en uso.';
       document.getElementById('ep-username-status').style.color = 'var(--up2)';
     } else {
-      alert('No se pudo guardar tu perfil: ' + error.message);
+      showToast('No se pudo guardar tu perfil: ' + error.message);
     }
     return;
   }

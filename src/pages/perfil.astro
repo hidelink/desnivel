@@ -103,9 +103,56 @@ main{max-width:1000px;margin:0 auto;padding:48px 24px 80px;}
 .route-card-link{
   margin-top:4px;font-size:12.5px;font-weight:700;color:var(--orange);display:flex;align-items:center;gap:6px;
 }
+
+/* ── TOAST / CONFIRM (replaces native alert/confirm) ──────
+   Dark regardless of page theme, same convention as other floating
+   chip UI — reads fine as dark either way, and avoids looking like a
+   browser dialog. */
+#toast-container{
+  position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:3500;
+  display:flex;flex-direction:column;gap:8px;align-items:center;pointer-events:none;
+  width:100%;padding:0 20px;
+}
+.toast{
+  background:#1e1e1e;color:#f1f1f1;font-size:13px;font-weight:600;line-height:1.4;
+  padding:12px 18px;border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.3);
+  opacity:0;transform:translateY(10px);transition:opacity .25s,transform .25s;
+  max-width:380px;text-align:center;pointer-events:auto;border-left:4px solid var(--muted2);
+}
+.toast.show{opacity:1;transform:translateY(0);}
+.toast-error{border-left-color:var(--up2);}
+#confirm-overlay{
+  display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);
+  z-index:3600;align-items:center;justify-content:center;padding:20px;
+}
+#confirm-overlay.show{display:flex;}
+.confirm-card{
+  width:360px;max-width:100%;background:var(--s1);border:1px solid var(--border);
+  border-radius:16px;padding:26px;display:flex;flex-direction:column;gap:18px;
+}
+.confirm-message{font-size:14px;color:var(--text);line-height:1.5;}
+.confirm-actions{display:flex;gap:10px;}
+.confirm-actions button{
+  flex:1;padding:10px;border-radius:9px;font-size:13px;font-weight:700;cursor:pointer;border:none;
+}
+.confirm-actions .secondary{background:#fff;border:1px solid var(--border2);color:var(--text);}
+.confirm-actions .danger{background:var(--up2);color:#fff;}
+.confirm-actions .danger:hover{background:#a8311f;}
 </style>
 </head>
 <body>
+
+<div id="toast-container"></div>
+
+<div id="confirm-overlay">
+  <div class="confirm-card">
+    <div class="confirm-message" id="confirm-message"></div>
+    <div class="confirm-actions">
+      <button type="button" class="secondary" id="confirm-cancel-btn">Cancelar</button>
+      <button type="button" class="danger" id="confirm-ok-btn">Confirmar</button>
+    </div>
+  </div>
+</div>
 
 <header>
   <a class="logo" href="/">
@@ -145,6 +192,39 @@ main{max-width:1000px;margin:0 auto;padding:48px 24px 80px;}
 
 <script is:inline>
 const supabaseClient = supabase.createClient(window.__SUPABASE_URL__, window.__SUPABASE_ANON_KEY__);
+
+function showToast(message, type = 'error'){
+  const container = document.getElementById('toast-container');
+  const el = document.createElement('div');
+  el.className = 'toast toast-' + type;
+  el.textContent = message;
+  container.appendChild(el);
+  requestAnimationFrame(() => el.classList.add('show'));
+  setTimeout(() => {
+    el.classList.remove('show');
+    setTimeout(() => el.remove(), 300);
+  }, 4200);
+}
+
+function showConfirm(message){
+  return new Promise((resolve) => {
+    const overlay = document.getElementById('confirm-overlay');
+    document.getElementById('confirm-message').textContent = message;
+    overlay.classList.add('show');
+    const okBtn = document.getElementById('confirm-ok-btn');
+    const cancelBtn = document.getElementById('confirm-cancel-btn');
+    const cleanup = (result) => {
+      overlay.classList.remove('show');
+      okBtn.removeEventListener('click', onOk);
+      cancelBtn.removeEventListener('click', onCancel);
+      resolve(result);
+    };
+    const onOk = () => cleanup(true);
+    const onCancel = () => cleanup(false);
+    okBtn.addEventListener('click', onOk);
+    cancelBtn.addEventListener('click', onCancel);
+  });
+}
 
 const DIFF_COLORS = {
   'Fácil':    { bg: '#e8f5e9', fg: 'var(--flat)' },
@@ -198,14 +278,14 @@ function routeCardHtml(row, isOwner){
 
 async function toggleHidden(routeId, nextHidden){
   const { error } = await supabaseClient.from('routes').update({ is_hidden: nextHidden }).eq('id', routeId);
-  if (error) { alert('No se pudo actualizar la ruta: ' + error.message); return; }
+  if (error) { showToast('No se pudo actualizar la ruta: ' + error.message); return; }
   await loadProfile();
 }
 
 async function deleteRoute(routeId){
-  if (!confirm('¿Borrar esta ruta? Esta acción no se puede deshacer.')) return;
+  if (!await showConfirm('¿Borrar esta ruta? Esta acción no se puede deshacer.')) return;
   const { error } = await supabaseClient.from('routes').delete().eq('id', routeId);
-  if (error) { alert('No se pudo borrar la ruta: ' + error.message); return; }
+  if (error) { showToast('No se pudo borrar la ruta: ' + error.message); return; }
   await loadProfile();
 }
 

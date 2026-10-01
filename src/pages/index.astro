@@ -105,6 +105,25 @@ header{
 }
 .logout-btn:hover{border-color:var(--up2);color:var(--up2);}
 
+/* ── TOAST / CONFIRM (replaces native alert/confirm) ───────
+   Dark regardless of page theme, same convention as the photo
+   lightbox and map legend — floating chip UI reads fine as dark
+   either way, and it keeps these from looking like a browser dialog. */
+#toast-container{
+  position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:3500;
+  display:flex;flex-direction:column;gap:8px;align-items:center;pointer-events:none;
+  width:100%;padding:0 20px;
+}
+.toast{
+  background:#1e1e1e;color:#f1f1f1;font-size:13px;font-weight:600;line-height:1.4;
+  padding:12px 18px;border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.3);
+  opacity:0;transform:translateY(10px);transition:opacity .25s,transform .25s;
+  max-width:380px;text-align:center;pointer-events:auto;border-left:4px solid var(--muted2);
+}
+.toast.show{opacity:1;transform:translateY(0);}
+.toast-error{border-left-color:var(--up2);}
+.toast-success{border-left-color:var(--flat);}
+
 /* ── LOGIN MODAL ────────────────────────────────────────── */
 #login-overlay, #onboarding-overlay{
   display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);
@@ -631,6 +650,8 @@ footer{
   <span class="loading-txt" id="loading-txt">Procesando tu ruta…</span>
 </div>
 
+<div id="toast-container"></div>
+
 <!-- LOGIN MODAL -->
 <div id="login-overlay" onclick="if(event.target===this) closeLoginModal()">
   <div class="login-card">
@@ -1055,6 +1076,20 @@ footer{
 </footer>
 
 <script is:inline>
+// ── TOAST (replaces native alert) ───────────────────────────
+function showToast(message, type = 'error'){
+  const container = document.getElementById('toast-container');
+  const el = document.createElement('div');
+  el.className = 'toast toast-' + type;
+  el.textContent = message;
+  container.appendChild(el);
+  requestAnimationFrame(() => el.classList.add('show'));
+  setTimeout(() => {
+    el.classList.remove('show');
+    setTimeout(() => el.remove(), 300);
+  }, 4200);
+}
+
 // ── AUTH (Supabase) ────────────────────────────────────────
 // Guarded: a missing/misconfigured key must not take down the rest of the
 // page (the GPX analyzer has nothing to do with login) — createClient
@@ -1094,9 +1129,9 @@ async function loginWithEmail(){
   if (!supabaseClient) return;
   const email = document.getElementById('login-email').value.trim();
   const password = document.getElementById('login-pass').value;
-  if (!email || !password) { alert('Ingresa tu correo y contraseña.'); return; }
+  if (!email || !password) { showToast('Ingresa tu correo y contraseña.'); return; }
   const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
-  if (error) { alert('No se pudo iniciar sesión: ' + translateAuthError(error.message)); return; }
+  if (error) { showToast('No se pudo iniciar sesión: ' + translateAuthError(error.message)); return; }
   closeLoginModal();
 }
 
@@ -1104,15 +1139,15 @@ async function signUpWithEmail(){
   if (!supabaseClient) return;
   const email = document.getElementById('login-email').value.trim();
   const password = document.getElementById('login-pass').value;
-  if (!email || !password) { alert('Ingresa tu correo y contraseña.'); return; }
-  if (password.length < 6) { alert('La contraseña debe tener al menos 6 caracteres.'); return; }
+  if (!email || !password) { showToast('Ingresa tu correo y contraseña.'); return; }
+  if (password.length < 6) { showToast('La contraseña debe tener al menos 6 caracteres.'); return; }
   const { data, error } = await supabaseClient.auth.signUp({ email, password });
-  if (error) { alert('No se pudo crear la cuenta: ' + translateAuthError(error.message)); return; }
+  if (error) { showToast('No se pudo crear la cuenta: ' + translateAuthError(error.message)); return; }
   // With email confirmation off, signUp logs the user in immediately — only
   // show the "check your inbox" message for the (currently unused) case
   // where confirmation is required and there's no session yet.
   if (!data.session) {
-    alert('Cuenta creada. Revisa tu correo para confirmarla antes de iniciar sesión.');
+    showToast('Cuenta creada. Revisa tu correo para confirmarla antes de iniciar sesión.', 'success');
   }
   closeLoginModal();
 }
@@ -1248,11 +1283,11 @@ async function completeOnboarding(){
   const username = normalizeUsername(document.getElementById('ob-username').value);
   const displayName = document.getElementById('ob-name').value.trim() || username;
   if (!/^[a-z0-9_]{3,20}$/.test(username)) {
-    alert('Usuario inválido: usa minúsculas, números y guion bajo, 3–20 caracteres.');
+    showToast('Usuario inválido: usa minúsculas, números y guion bajo, 3–20 caracteres.');
     return;
   }
   if (RESERVED_USERNAMES.has(username)) {
-    alert('Ese usuario está reservado. Elige otro.');
+    showToast('Ese usuario está reservado. Elige otro.');
     return;
   }
   const { error } = await supabaseClient.from('profiles').insert({
@@ -1266,7 +1301,7 @@ async function completeOnboarding(){
       document.getElementById('ob-username-status').textContent = 'Ese usuario ya está en uso.';
       document.getElementById('ob-username-status').style.color = 'var(--up2)';
     } else {
-      alert('No se pudo guardar tu perfil: ' + error.message);
+      showToast('No se pudo guardar tu perfil: ' + error.message);
     }
     return;
   }
@@ -1300,7 +1335,7 @@ function handleFile(file) {
       // buildRoutePlan() reads their displayed text for the plan summary.
       setTimeout(autoSaveIfLoggedIn, 1000);
     }
-    catch(err) { alert('Error leyendo GPX: ' + err.message); }
+    catch(err) { showToast('Error leyendo GPX: ' + err.message); }
     finally { document.getElementById('loading').classList.remove('show'); }
   };
   r.readAsText(file);
@@ -1368,7 +1403,7 @@ function gradeColor(g) {
 // ── PROCESS ────────────────────────────────────────────────
 function processGPX(xml, filename) {
   const { pts, name } = parseGPX(xml);
-  if (pts.length < 2) { alert('El GPX no contiene suficientes puntos de track.'); return; }
+  if (pts.length < 2) { showToast('El GPX no contiene suficientes puntos de track.'); return; }
 
   currentGpxText = xml;
   currentFilename = filename;
@@ -1459,7 +1494,7 @@ function processGPX(xml, filename) {
 
 // ── DOWNLOAD GPX ───────────────────────────────────────────
 function downloadGpx(){
-  if (!gpxPoints.length || !currentGpxText) { alert('Carga una ruta primero.'); return; }
+  if (!gpxPoints.length || !currentGpxText) { showToast('Carga una ruta primero.'); return; }
   const btn = document.getElementById('download-gpx-btn');
   const orig = btn.textContent;
   const blob = new Blob([currentGpxText], { type:'application/gpx+xml' });
@@ -1504,7 +1539,7 @@ function buildRoutePlan(){
 // include them, but nothing else should assume that forever).
 function applyRoutePlan(plan){
   if (!plan || plan.type !== 'desnivel-route-plan' || !plan.gpx) {
-    alert('Ese link no es una ruta de Desnivel válida.');
+    showToast('Ese link no es una ruta de Desnivel válida.');
     return;
   }
   processGPX(plan.gpx, plan.name || plan.filename || 'Mi ruta');
@@ -1600,7 +1635,7 @@ async function autoSaveIfLoggedIn(){
 }
 
 async function shareCurrentRoute(){
-  if (!gpxPoints.length || !currentGpxText) { alert('Carga una ruta primero.'); return; }
+  if (!gpxPoints.length || !currentGpxText) { showToast('Carga una ruta primero.'); return; }
   const btn = document.getElementById('share-route-btn');
   const orig = btn.textContent;
 
@@ -1627,7 +1662,7 @@ async function shareCurrentRoute(){
     const msg = err.name === 'TypeError'
       ? 'No se pudo conectar con el servidor. Revisa tu conexión e intenta de nuevo.'
       : err.message;
-    alert('No se pudo generar el link para compartir: ' + msg);
+    showToast('No se pudo generar el link para compartir: ' + msg);
     btn.textContent = orig;
   } finally {
     btn.disabled = false;
@@ -1650,7 +1685,7 @@ async function shareCurrentRoute(){
     applyRoutePlan(data);
     currentShareId = id;
   } catch (err) {
-    alert(err.message);
+    showToast(err.message);
   } finally {
     document.getElementById('loading').classList.remove('show');
     loadingTxt.textContent = 'Procesando tu ruta…';
@@ -1878,7 +1913,7 @@ function addCheckpoint(){
   const km = parseFloat(kmInput.value);
   const totalKm = gpxPoints.length ? cumDistKm[cumDistKm.length-1] : 0;
   if (!km || km <= 0 || (totalKm && km > totalKm)) {
-    alert(totalKm ? `Ingresa un km entre 0 y ${totalKm.toFixed(1)}.` : 'Carga una ruta primero.');
+    showToast(totalKm ? `Ingresa un km entre 0 y ${totalKm.toFixed(1)}.` : 'Carga una ruta primero.');
     return;
   }
   const label = document.getElementById('cp-label').value.trim();
@@ -1951,7 +1986,7 @@ function calcStrategy(){
   const h=parseInt(document.getElementById('inp-hours').value)||0;
   const m=parseInt(document.getElementById('inp-mins').value)||0;
   const tgt=h*3600+m*60;
-  if(tgt<=0){alert('Ingresa un tiempo meta válido.');return;}
+  if(tgt<=0){showToast('Ingresa un tiempo meta válido.');return;}
 
   const splitBy=document.getElementById('split-by').value;
   const totalKm=cumDistKm[cumDistKm.length-1];
