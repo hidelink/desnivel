@@ -593,14 +593,18 @@ footer{
 /* ── RESPONSIVE ─────────────────────────────────────────── */
 @media(max-width:640px){
   header{padding:12px 16px;}
-  .ig-badge{display:none;}
+  .ig-badge:not(.explorar-badge){display:none;}
   #drop-zone,#main{padding-left:16px;padding-right:16px;}
   #map{height:360px;}
   .stats-grid{grid-template-columns:repeat(2,1fr);}
   .route-card{flex-direction:column;align-items:flex-start;}
-  /* Header has to fit logo + upload + login/chip in ~340px of usable
-     width — icon-only upload button and a tighter, truncating chip. */
+  /* Header has to fit logo + Explorar + upload + login/chip in ~340px of
+     usable width — icon-only buttons and a tighter, truncating chip.
+     Explorar stays visible (icon-only): unlike the Instagram link, it's a
+     real nav destination, not a decorative badge. */
   .header-right{gap:6px;}
+  .explorar-badge .btn-label{display:none;}
+  .explorar-badge{padding:9px 10px;}
   .upload-btn .btn-label{display:none;}
   .upload-btn{padding:9px 10px;}
   .login-btn{padding:8px 10px;font-size:12px;white-space:nowrap;}
@@ -714,9 +718,9 @@ footer{
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><circle cx="12" cy="12" r="5"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg>
       @hidelink
     </a>
-    <a class="ig-badge" href="/explorar">
+    <a class="ig-badge explorar-badge" href="/explorar">
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-      Explorar
+      <span class="btn-label">Explorar</span>
     </a>
     <button class="upload-btn" onclick="document.getElementById('file-input').click()">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
@@ -1199,12 +1203,26 @@ function normalizeUsername(raw){
   return raw.trim().toLowerCase().replace(/[^a-z0-9_]/g, '');
 }
 
+// Real top-level routes a username would otherwise shadow — Netlify's
+// /:username rewrite only fires when no real file matches the request
+// first, so one of these as a username would make that profile permanently
+// unreachable at its clean URL.
+const RESERVED_USERNAMES = new Set([
+  'perfil', 'editar-perfil', 'explorar', 'rutas', 'acerca', 'en', 'api',
+  'admin', 'login', 'signup', 'logout', 'index',
+]);
+
 async function checkUsernameAvailability(){
   const status = document.getElementById('ob-username-status');
   const username = normalizeUsername(document.getElementById('ob-username').value);
   if (!username) { status.textContent = ''; return; }
   if (!/^[a-z0-9_]{3,20}$/.test(username)) {
     status.textContent = 'Usa minúsculas, números y guion bajo. 3–20 caracteres.';
+    status.style.color = 'var(--up2)';
+    return;
+  }
+  if (RESERVED_USERNAMES.has(username)) {
+    status.textContent = 'Ese usuario está reservado.';
     status.style.color = 'var(--up2)';
     return;
   }
@@ -1231,6 +1249,10 @@ async function completeOnboarding(){
   const displayName = document.getElementById('ob-name').value.trim() || username;
   if (!/^[a-z0-9_]{3,20}$/.test(username)) {
     alert('Usuario inválido: usa minúsculas, números y guion bajo, 3–20 caracteres.');
+    return;
+  }
+  if (RESERVED_USERNAMES.has(username)) {
+    alert('Ese usuario está reservado. Elige otro.');
     return;
   }
   const { error } = await supabaseClient.from('profiles').insert({

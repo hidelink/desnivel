@@ -113,12 +113,24 @@ function normalizeUsername(raw){
   return raw.trim().toLowerCase().replace(/[^a-z0-9_]/g, '');
 }
 
+// Real top-level routes a username would otherwise shadow — see the same
+// list and reasoning in index.astro's onboarding step.
+const RESERVED_USERNAMES = new Set([
+  'perfil', 'editar-perfil', 'explorar', 'rutas', 'acerca', 'en', 'api',
+  'admin', 'login', 'signup', 'logout', 'index',
+]);
+
 async function checkUsernameAvailability(){
   const status = document.getElementById('ep-username-status');
   const username = normalizeUsername(document.getElementById('ep-username').value);
   if (!username) { status.textContent = ''; return; }
   if (!/^[a-z0-9_]{3,20}$/.test(username)) {
     status.textContent = 'Usa minúsculas, números y guion bajo. 3–20 caracteres.';
+    status.style.color = 'var(--up2)';
+    return;
+  }
+  if (RESERVED_USERNAMES.has(username)) {
+    status.textContent = 'Ese usuario está reservado.';
     status.style.color = 'var(--up2)';
     return;
   }
@@ -143,6 +155,10 @@ async function saveProfile(){
   const displayName = document.getElementById('ep-name').value.trim() || username;
   if (!/^[a-z0-9_]{3,20}$/.test(username)) {
     alert('Usuario inválido: usa minúsculas, números y guion bajo, 3–20 caracteres.');
+    return;
+  }
+  if (RESERVED_USERNAMES.has(username)) {
+    alert('Ese usuario está reservado. Elige otro.');
     return;
   }
   const { error } = await supabaseClient

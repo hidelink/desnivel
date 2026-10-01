@@ -1,9 +1,13 @@
 ---
 // Public profile page. Reached as a clean /<username> URL via the Netlify
-// redirect in netlify.toml (/:username -> /perfil?u=:username, status 200 —
-// a rewrite, so the address bar keeps showing /<username>). This page itself
-// just reads ?u= and renders client-side, same pattern as the ?r= share-link
-// loading on the home page — no SSR adapter needed for a static site.
+// rewrite in netlify.toml (/:username -> /perfil, status 200). A rewrite to
+// a STATIC file only affects which file's bytes get served — the browser's
+// own address bar (and location.pathname/search) always stays exactly what
+// it actually requested, i.e. "/<username>" with no query string. So the
+// username has to be read from location.pathname, not a ?u= query param
+// (which a rewrite target can never actually deliver to client-side JS for
+// a static response). ?u= is kept as a fallback for local dev, where there's
+// no Netlify rewrite and this page is hit directly as /perfil?u=<username>.
 const SUPABASE_URL = import.meta.env.PUBLIC_SUPABASE_URL;
 const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
 ---
@@ -198,8 +202,17 @@ function escapeHtml(s){
   return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
 
+// See the note at the top of the file: a rewrite never changes what the
+// browser's own URL looks like, so the username lives in the path, not a
+// query string, once this page is reached the real way (via /<username>).
+function usernameFromUrl(){
+  const path = location.pathname.replace(/\/+$/, '');
+  if (path && path !== '/perfil') return decodeURIComponent(path.replace(/^\/+/, ''));
+  return new URLSearchParams(location.search).get('u');
+}
+
 async function loadProfile(){
-  const username = new URLSearchParams(location.search).get('u');
+  const username = usernameFromUrl();
   const stateMsg = document.getElementById('state-msg');
   if (!username) { stateMsg.textContent = 'Perfil no encontrado.'; return; }
 

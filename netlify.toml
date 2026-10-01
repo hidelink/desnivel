@@ -9,10 +9,13 @@
   directory = "netlify/functions"
 
 # Clean profile URLs (/hidelink instead of /perfil?u=hidelink). A rewrite
-# (status 200, not a redirect), so the address bar keeps the clean path.
+# (status 200, not a redirect), so the address bar keeps the clean path —
+# perfil.astro reads the username back out of that same path client-side,
+# since a rewrite to a static file can't actually hand it a query string
+# (the ?u= here is inert; Netlify just needs a distinct "to" to rewrite to).
 # Netlify only applies this when no real file matches the request first, so
 # existing routes like /rutas or /acerca are unaffected.
 [[redirects]]
   from = "/:username"
-  to = "/perfil?u=:username"
+  to = "/perfil"
   status = 200

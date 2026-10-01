@@ -52,6 +52,11 @@ as $$
   update routes set view_count = view_count + 1 where id = route_id;
 $$;
 
+-- Postgres grants EXECUTE on new functions to PUBLIC by default, which
+-- would let anyone with the anon key call this directly to inflate any
+-- route's view count — only get-route.mjs (service_role) should ever call it.
+revoke execute on function increment_route_views(text) from anon, authenticated;
+
 -- Profiles: one per auth.users row, created by the client right after first
 -- login via the "elige tu usuario" step (not a trigger — the user picks the
 -- username themselves, so there's nothing to insert until then).
@@ -61,7 +66,17 @@ create table if not exists profiles (
   display_name text not null default '',
   avatar_color text not null default '#e8650a',
   created_at timestamptz not null default now(),
-  constraint username_format check (username ~ '^[a-z0-9_]{3,20}$')
+  constraint username_format check (username ~ '^[a-z0-9_]{3,20}$'),
+  -- Real top-level routes a username would otherwise shadow — the
+  -- /:username -> /perfil rewrite in netlify.toml only fires when no real
+  -- file matches the request first, so one of these as a username would
+  -- make that profile permanently unreachable at its clean URL. Enforced
+  -- here too (not just client-side) since this is the only thing standing
+  -- between a username and a real route once RLS lets the insert through.
+  constraint username_not_reserved check (username not in (
+    'perfil', 'editar-perfil', 'explorar', 'rutas', 'acerca', 'en', 'api',
+    'admin', 'login', 'signup', 'logout', 'index'
+  ))
 );
 
 alter table profiles enable row level security;
