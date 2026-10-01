@@ -47,11 +47,18 @@ header{
 .logo-text span{color:var(--orange);}
 .nav-link{font-size:13px;font-weight:600;color:var(--muted);white-space:nowrap;}
 .header-nav{display:flex;align-items:center;gap:22px;}
+.upload-btn{
+  display:flex;align-items:center;gap:7px;background:var(--orange);color:#fff;border:none;
+  padding:9px 18px;border-radius:8px;font-size:13px;font-weight:700;white-space:nowrap;
+}
+.upload-btn:hover{background:var(--orange2);}
 @media(max-width:480px){
   header{padding:12px 16px;gap:8px;}
   .logo-text{font-size:15px;}
-  .header-nav{gap:12px;}
+  .header-nav{gap:10px;}
   .nav-link{font-size:12px;}
+  .upload-btn .btn-label{display:none;}
+  .upload-btn{padding:9px 10px;}
   .profile-header{flex-wrap:wrap;}
   .edit-profile-btn{margin-left:0;}
 }
@@ -112,6 +119,10 @@ main{max-width:1000px;margin:0 auto;padding:48px 24px 80px;}
   <nav class="header-nav">
     <a class="nav-link" href="/explorar">Explorar</a>
     <a class="nav-link" href="/">Analizador</a>
+    <a class="upload-btn" href="/">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+      <span class="btn-label">Subir GPX</span>
+    </a>
   </nav>
 </header>
 
