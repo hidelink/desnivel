@@ -330,6 +330,13 @@ header{
 }
 .leg-reopen:hover{background:rgba(11,11,11,.95);}
 .leg-reopen.show{display:flex;}
+.photos-toggle{
+  position:absolute;top:12px;right:12px;z-index:500;
+  background:rgba(11,11,11,.88);border:1px solid var(--border2);border-radius:10px;
+  padding:7px 12px;backdrop-filter:blur(8px);color:#efefef;font-size:11.5px;font-weight:600;
+  cursor:pointer;white-space:nowrap;
+}
+.photos-toggle:hover{background:rgba(11,11,11,.95);}
 .hover-dot{width:12px;height:12px;background:#fff;border:3px solid var(--orange);border-radius:50%;box-shadow:0 0 8px rgba(232,101,10,.8);}
 
 /* ── CHART ──────────────────────────────────────────────── */
@@ -918,6 +925,7 @@ footer{
       <div class="leg-row"><div class="leg-line" style="background:#0d47a1"></div> Bajada fuerte (&gt;10%)</div>
     </div>
     <button type="button" class="leg-reopen" id="leg-reopen" onclick="toggleLegend(true)" aria-label="Mostrar leyenda de pendiente" title="Mostrar leyenda de pendiente">△</button>
+    <button type="button" class="photos-toggle" id="photos-toggle-btn" style="display:none" onclick="toggleMapPhotos()" title="Ocultar/mostrar fotos en el mapa">📷 Ocultar fotos</button>
   </div>
 
   <!-- ELEVATION CHART -->
@@ -1827,6 +1835,16 @@ function mkMapPillIcon(color, label) {
 // Checkpoints are session-only (never saved/shared, see buildRoutePlan),
 // so these are redrawn from the in-memory `checkpoints` array on every
 // add/remove rather than persisted anywhere.
+// Bright flag badge, deliberately louder than the dark Inicio/Fin pills —
+// a checkpoint needs to read at a glance over terrain, the route line and
+// (potentially) a cluster of photo markers, not blend in as "one more pin".
+function mkCheckpointIcon(label) {
+  return L.divIcon({
+    className:'',
+    html:`<div style="display:flex;align-items:center;gap:6px;background:#ffb300;border:2px solid #1a1a1a;border-radius:20px;padding:4px 10px 4px 4px;font-size:12px;font-weight:800;color:#1a1a1a;white-space:nowrap;box-shadow:0 3px 10px rgba(0,0,0,.45)"><span style="font-size:15px;line-height:1">🚩</span>${label}</div>`,
+    iconAnchor:[13, 28]
+  });
+}
 function renderCheckpointMarkers(){
   checkpointMarkers.forEach(m => map && map.removeLayer(m));
   checkpointMarkers = [];
@@ -1835,7 +1853,9 @@ function renderCheckpointMarkers(){
     const idx = findPointIndexForKm(cp.km);
     const pt = gpxPoints[idx];
     const label = escapeHtml(cp.label || `CP${i+1}`);
-    const marker = L.marker([pt.lat, pt.lon], { icon: mkMapPillIcon('#8e44ad', label) }).addTo(map);
+    // Above photo markers (zIndexOffset 500) so a checkpoint never ends up
+    // hidden under one when they land close together.
+    const marker = L.marker([pt.lat, pt.lon], { icon: mkCheckpointIcon(label), zIndexOffset: 700 }).addTo(map);
     checkpointMarkers.push(marker);
   });
 }
@@ -2396,10 +2416,20 @@ function renderGallery() {
 }
 
 // Camera markers on the map for geotagged photos
+let photosHiddenOnMap = false;
+function toggleMapPhotos(){
+  photosHiddenOnMap = !photosHiddenOnMap;
+  document.getElementById('photos-toggle-btn').textContent = photosHiddenOnMap ? '📷 Mostrar fotos' : '📷 Ocultar fotos';
+  updatePhotoMarkers();
+}
 function updatePhotoMarkers() {
   if (!map) return;
   photoMarkers.forEach(m=>map.removeLayer(m));
   photoMarkers = [];
+
+  const hasGpsPhotos = allPhotos.some(p => p.hasGps && p.lat && p.lon);
+  document.getElementById('photos-toggle-btn').style.display = hasGpsPhotos ? 'block' : 'none';
+  if (photosHiddenOnMap) return;
 
   allPhotos.forEach((p,i)=>{
     if (!p.hasGps || !p.lat || !p.lon) return;
