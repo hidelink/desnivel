@@ -1257,7 +1257,12 @@ function handleFile(file) {
   currentShareId = null;
   const r = new FileReader();
   r.onload = e => {
-    try { processGPX(e.target.result, file.name.replace(/\.gpx$/i,'').replace(/_/g,' ')); }
+    try {
+      processGPX(e.target.result, file.name.replace(/\.gpx$/i,'').replace(/_/g,' '));
+      // Delayed so the animated stat counters (900ms) have settled before
+      // buildRoutePlan() reads their displayed text for the plan summary.
+      setTimeout(autoSaveIfLoggedIn, 1000);
+    }
     catch(err) { alert('Error leyendo GPX: ' + err.message); }
     finally { document.getElementById('loading').classList.remove('show'); }
   };
@@ -1523,13 +1528,48 @@ async function gzipToBase64(obj){
   return btoa(binary);
 }
 
+// Posts the current route to Supabase (via the Netlify Function) and
+// returns its id. When logged in, the user's access token rides along so
+// the server can attribute the route to their profile — shared by the
+// explicit "Compartir" button and the silent auto-save on upload.
+async function saveRouteAndGetId(){
+  const plan = buildRoutePlan();
+  const gzipBase64 = await gzipToBase64(plan);
+  const headers = { 'content-type': 'application/json' };
+  if (supabaseClient) {
+    const { data: { session } } = await supabaseClient.auth.getSession();
+    if (session) headers['authorization'] = 'Bearer ' + session.access_token;
+  }
+  const res = await fetch('/api/save-route', {
+    method: 'POST', headers, body: JSON.stringify({ gzipBase64 })
+  });
+  const data = await res.json().catch(()=>({}));
+  if (!res.ok) throw new Error(data.error || ('Error ' + res.status));
+  return data.id;
+}
+
+// Uploading a GPX while logged in saves it to the profile automatically —
+// no separate "publish" step. Silent: a failure here shouldn't interrupt
+// someone who only wanted to analyze a route, so it's logged, not alerted.
+async function autoSaveIfLoggedIn(){
+  if (!supabaseClient || currentShareId) return;
+  const { data: { session } } = await supabaseClient.auth.getSession();
+  if (!session) return;
+  try {
+    currentShareId = await saveRouteAndGetId();
+  } catch (err) {
+    console.error('No se pudo guardar la ruta en tu perfil automáticamente:', err);
+  }
+}
+
 async function shareCurrentRoute(){
   if (!gpxPoints.length || !currentGpxText) { alert('Carga una ruta primero.'); return; }
   const btn = document.getElementById('share-route-btn');
   const orig = btn.textContent;
 
-  // Already has a canonical link — opened via one, or shared earlier this
-  // session. Hand back that same link instead of creating a duplicate.
+  // Already has a canonical link — opened via one, auto-saved on upload, or
+  // shared earlier this session. Hand back that same link instead of
+  // creating a duplicate.
   if (currentShareId) {
     const url = `${location.origin}${location.pathname}?r=${currentShareId}`;
     const copied = await copyToClipboard(url);
@@ -1541,17 +1581,8 @@ async function shareCurrentRoute(){
 
   btn.textContent = 'Subiendo…'; btn.disabled = true;
   try {
-    const plan = buildRoutePlan();
-    const gzipBase64 = await gzipToBase64(plan);
-    const res = await fetch('/api/save-route', {
-      method:'POST',
-      headers:{'content-type':'application/json'},
-      body: JSON.stringify({ gzipBase64 })
-    });
-    const data = await res.json().catch(()=>({}));
-    if (!res.ok) throw new Error(data.error || ('Error ' + res.status));
-    currentShareId = data.id;
-    const url = `${location.origin}${location.pathname}?r=${data.id}`;
+    currentShareId = await saveRouteAndGetId();
+    const url = `${location.origin}${location.pathname}?r=${currentShareId}`;
     const copied = await copyToClipboard(url);
     showShareResult(url);
     btn.textContent = copied ? '✓ Link copiado' : '✓ Link listo';

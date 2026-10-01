@@ -14,6 +14,17 @@ export default async (req) => {
     return json({ error: 'Method not allowed' }, 405);
   }
 
+  // Logged-in callers send their Supabase access token — verify it ourselves
+  // rather than trusting a client-supplied user id, so a route can only ever
+  // be attributed to whoever actually holds that session.
+  let userId = null;
+  const authHeader = req.headers.get('authorization') || '';
+  const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null;
+  if (token) {
+    const { data, error } = await supabase.auth.getUser(token);
+    if (!error && data?.user) userId = data.user.id;
+  }
+
   let payload;
   try {
     payload = await req.json();
@@ -60,7 +71,7 @@ export default async (req) => {
   const suffix = randomUUID().replace(/-/g, '').slice(0, 6);
   const id = `${slug}-${suffix}`;
 
-  const { error } = await supabase.from('routes').insert({ id, plan });
+  const { error } = await supabase.from('routes').insert({ id, plan, user_id: userId });
   if (error) {
     return json({ error: 'No se pudo guardar la ruta para compartir' }, 500);
   }
