@@ -548,7 +548,7 @@ footer{
 
 <div id="loading">
   <div class="spin"></div>
-  <span class="loading-txt">Procesando tu ruta…</span>
+  <span class="loading-txt" id="loading-txt">Procesando tu ruta…</span>
 </div>
 
 <!-- HEADER -->
@@ -1215,6 +1215,9 @@ async function shareCurrentRoute(){
 (async function initFromShareLink(){
   const id = new URLSearchParams(location.search).get('r');
   if (!id) return;
+  const loadingTxt = document.getElementById('loading-txt');
+  loadingTxt.textContent = 'Cargando ruta compartida…';
+  document.getElementById('loading').classList.add('show');
   try {
     const res = await fetch(`/api/get-route?id=${encodeURIComponent(id)}`);
     const data = await res.json().catch(()=>({}));
@@ -1222,6 +1225,9 @@ async function shareCurrentRoute(){
     applyRoutePlan(data);
   } catch (err) {
     alert(err.message);
+  } finally {
+    document.getElementById('loading').classList.remove('show');
+    loadingTxt.textContent = 'Procesando tu ruta…';
   }
 })();
 
