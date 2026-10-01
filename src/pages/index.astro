@@ -1271,7 +1271,7 @@ function normalizeUsername(raw){
 // unreachable at its clean URL.
 const RESERVED_USERNAMES = new Set([
   'perfil', 'editar-perfil', 'explorar', 'rutas', 'acerca', 'en', 'api',
-  'admin', 'login', 'signup', 'logout', 'index',
+  'admin', 'login', 'signup', 'logout', 'index', 'r',
 ]);
 
 async function checkUsernameAvailability(){
@@ -1715,7 +1715,7 @@ async function shareCurrentRoute(){
   // shared earlier this session. Hand back that same link instead of
   // creating a duplicate.
   if (currentShareId) {
-    const url = `${location.origin}${location.pathname}?r=${currentShareId}`;
+    const url = `${location.origin}/r/${currentShareId}`;
     const copied = await copyToClipboard(url);
     showShareResult(url);
     btn.textContent = copied ? '✓ Link copiado' : '✓ Link listo';
@@ -1726,7 +1726,7 @@ async function shareCurrentRoute(){
   btn.textContent = 'Subiendo…'; btn.disabled = true;
   try {
     currentShareId = await saveRouteAndGetId();
-    const url = `${location.origin}${location.pathname}?r=${currentShareId}`;
+    const url = `${location.origin}/r/${currentShareId}`;
     const copied = await copyToClipboard(url);
     showShareResult(url);
     btn.textContent = copied ? '✓ Link copiado' : '✓ Link listo';
@@ -1742,10 +1742,23 @@ async function shareCurrentRoute(){
   }
 }
 
-// If the page was opened via a shared link (?r=<id>), fetch and load that
-// route automatically instead of showing the empty upload screen.
+// If the page was opened via a shared link, fetch and load that route
+// automatically instead of showing the empty upload screen. The canonical
+// link is the clean /r/<id> (a Netlify rewrite to "/" — see netlify.toml),
+// read back out of location.pathname for the same reason perfil.astro reads
+// its username from the path: a rewrite to a static file never actually
+// changes what the browser's own URL looks like, so a ?r= query string
+// aimed at a rewrite target is never reachable here. The old ?r=<id> query
+// form still works too, both for local dev (no rewrite there) and so
+// already-shared links from before this change don't break.
+function shareIdFromUrl(){
+  const match = location.pathname.match(/^\/r\/([^/]+)\/?$/);
+  if (match) return decodeURIComponent(match[1]);
+  return new URLSearchParams(location.search).get('r');
+}
+
 (async function initFromShareLink(){
-  const id = new URLSearchParams(location.search).get('r');
+  const id = shareIdFromUrl();
   if (!id) return;
   const loadingTxt = document.getElementById('loading-txt');
   loadingTxt.textContent = 'Cargando ruta compartida…';

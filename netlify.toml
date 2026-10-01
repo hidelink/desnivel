@@ -19,3 +19,12 @@
   from = "/:username"
   to = "/perfil"
   status = 200
+
+# Clean share links (/r/gornergrat-4f8a2c instead of /?r=gornergrat-4f8a2c).
+# Two path segments, so it can never collide with the single-segment
+# /:username rule above — index.astro reads the id back out of
+# location.pathname client-side, same reasoning as the profile rewrite.
+[[redirects]]
+  from = "/r/:id"
+  to = "/"
+  status = 200

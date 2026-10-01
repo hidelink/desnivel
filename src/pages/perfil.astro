@@ -293,7 +293,7 @@ function routeCardHtml(row, isOwner){
         <span>↑ <b>${escapeHtml(summary.gain || '—')}</b></span>
       </div>
       ${diff ? `<span class="diff-pill" style="background:${colors.bg};color:${colors.fg}">${escapeHtml(diff)}</span>` : ''}
-      <a class="route-card-link" href="/?r=${encodeURIComponent(row.id)}">
+      <a class="route-card-link" href="/r/${encodeURIComponent(row.id)}">
         Ver ruta →
       </a>
     </div>

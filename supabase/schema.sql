@@ -75,7 +75,7 @@ create table if not exists profiles (
   -- between a username and a real route once RLS lets the insert through.
   constraint username_not_reserved check (username not in (
     'perfil', 'editar-perfil', 'explorar', 'rutas', 'acerca', 'en', 'api',
-    'admin', 'login', 'signup', 'logout', 'index'
+    'admin', 'login', 'signup', 'logout', 'index', 'r'
   ))
 );
 
