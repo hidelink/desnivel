@@ -26,16 +26,51 @@ header{display:flex;align-items:center;justify-content:space-between;padding:14p
 .logo{display:flex;align-items:center;gap:10px;}
 .logo-text{font-size:17px;font-weight:800;letter-spacing:-.4px;color:var(--text);}
 .logo-text span{color:var(--orange);}
-.nav-link{font-size:13px;font-weight:600;color:var(--muted);}
+.nav-link{display:flex;align-items:center;gap:5px;font-size:13px;font-weight:600;color:var(--muted);white-space:nowrap;}
+.nav-link svg{flex-shrink:0;}
 .header-nav{display:flex;align-items:center;gap:18px;}
+.ig-badge{
+  display:flex;align-items:center;gap:6px;
+  font-size:12px;font-weight:600;color:var(--muted);
+  padding:6px 12px;border:1px solid var(--border2);border-radius:20px;
+  transition:all .2s;
+}
+.ig-badge:hover{border-color:var(--orange);color:var(--orange);}
+.ig-badge svg{flex-shrink:0;}
 .upload-btn{
   display:flex;align-items:center;gap:7px;background:var(--orange);color:#fff;border:none;
   padding:9px 18px;border-radius:8px;font-size:13px;font-weight:700;white-space:nowrap;
 }
 .upload-btn:hover{background:var(--orange2);}
-@media(max-width:480px){
+.login-btn{
+  background:#fff;border:1px solid var(--border2);color:var(--text);
+  font-size:13px;font-weight:600;padding:8px 16px;border-radius:8px;cursor:pointer;
+}
+.login-btn:hover{border-color:var(--orange);color:var(--orange);}
+.auth-chip{display:flex;align-items:center;gap:8px;padding:5px 12px 5px 5px;border-radius:20px;border:1px solid var(--border2);}
+.auth-avatar{
+  width:26px;height:26px;border-radius:50%;background:var(--orange);color:#fff;
+  font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+#auth-email{font-size:12.5px;font-weight:600;color:var(--text);max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.logout-btn{
+  background:none;border:1px solid var(--border2);color:var(--muted);
+  font-size:12.5px;font-weight:600;padding:8px 14px;border-radius:8px;cursor:pointer;
+}
+.logout-btn:hover{border-color:var(--up2);color:var(--up2);}
+@media(max-width:640px){
+  header{padding:12px 16px;gap:8px;}
+  .logo-text{font-size:15px;}
+  .header-nav{gap:6px;}
+  .nav-link{font-size:12px;}
+  .nav-link .btn-label{display:none;}
+  .ig-badge{display:none;}
   .upload-btn .btn-label{display:none;}
   .upload-btn{padding:9px 10px;}
+  .login-btn{padding:8px 10px;font-size:12px;white-space:nowrap;}
+  .auth-chip{padding:4px 8px 4px 4px;}
+  #auth-email{max-width:60px;}
+  .logout-btn{padding:8px 10px;font-size:11.5px;}
 }
 main{max-width:460px;margin:0 auto;padding:48px 24px 80px;}
 #state-msg{font-size:14px;color:var(--muted);text-align:center;padding:60px 20px;}
@@ -80,19 +115,39 @@ h1{font-size:20px;font-weight:800;margin-bottom:22px;}
 
 <header>
   <a class="logo" href="/">
-    <svg width="32" height="32" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+    <svg width="36" height="36" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0">
       <rect width="512" height="512" rx="112" fill="#141414"/>
       <path d="M30 420 L170 185 L230 260 L256 220 L282 260 L342 185 L482 420Z" fill="#1c1c1c"/>
       <path d="M52 390 C80 388,108 384,130 362 C152 340,162 308,178 280 C194 252,212 230,228 208 C240 190,250 172,256 152 C262 172,268 190,280 208 C296 230,316 256,336 288 C356 320,374 350,400 370 C424 386,446 390,462 392" fill="none" stroke="#e8650a" stroke-width="36" stroke-linecap="round" stroke-linejoin="round"/>
+      <circle cx="52"  cy="390" r="28" fill="#141414" stroke="#4fc3f7" stroke-width="16"/>
+      <circle cx="256" cy="152" r="28" fill="#141414" stroke="#e8650a" stroke-width="16"/>
+      <circle cx="256" cy="152" r="10" fill="#ff8c3a"/>
     </svg>
     <span class="logo-text">Desni<span>vel</span></span>
   </a>
   <nav class="header-nav">
-    <a class="nav-link" href="/">← Analizador</a>
+    <a class="ig-badge" href="https://instagram.com/hidelink" target="_blank" rel="noopener">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><circle cx="12" cy="12" r="5"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg>
+      @hidelink
+    </a>
+    <a class="nav-link" href="/">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="3 12 8 12 10 18 14 6 16 12 21 12"/></svg>
+      <span class="btn-label">Analizador</span>
+    </a>
     <a class="upload-btn" href="/">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
       <span class="btn-label">Subir GPX</span>
     </a>
+    <div id="auth-logged-out" style="display:flex;align-items:center">
+      <a class="login-btn" href="/">Iniciar sesión</a>
+    </div>
+    <div id="auth-logged-in" style="display:none;align-items:center;gap:10px">
+      <a class="auth-chip" id="auth-chip-link" href="/">
+        <div class="auth-avatar" id="auth-avatar">?</div>
+        <span id="auth-email"></span>
+      </a>
+      <button class="logout-btn" onclick="headerLogout()">Salir</button>
+    </div>
   </nav>
 </header>
 
@@ -133,6 +188,29 @@ h1{font-size:20px;font-weight:800;margin-bottom:22px;}
 
 <script is:inline>
 const supabaseClient = supabase.createClient(window.__SUPABASE_URL__, window.__SUPABASE_ANON_KEY__);
+
+// Header auth state — same chip/login-button pattern as the home page.
+async function renderHeaderAuth(session){
+  const loggedOut = document.getElementById('auth-logged-out');
+  const loggedIn = document.getElementById('auth-logged-in');
+  if (!session) { loggedOut.style.display = 'flex'; loggedIn.style.display = 'none'; return; }
+  loggedOut.style.display = 'none'; loggedIn.style.display = 'flex';
+  const email = session.user.email || '';
+  document.getElementById('auth-avatar').textContent = (email[0] || '?').toUpperCase();
+  document.getElementById('auth-email').textContent = email;
+  const { data: profile } = await supabaseClient.from('profiles').select('username, avatar_color').eq('id', session.user.id).maybeSingle();
+  if (profile) {
+    document.getElementById('auth-avatar').style.background = profile.avatar_color;
+    document.getElementById('auth-email').textContent = '@' + profile.username;
+    document.getElementById('auth-chip-link').href = '/' + profile.username;
+  }
+}
+async function headerLogout(){
+  await supabaseClient.auth.signOut();
+  location.href = '/';
+}
+supabaseClient.auth.onAuthStateChange((_event, session) => renderHeaderAuth(session));
+supabaseClient.auth.getSession().then(({ data }) => renderHeaderAuth(data.session));
 
 function showToast(message){
   const container = document.getElementById('toast-container');
