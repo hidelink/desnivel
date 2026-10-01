@@ -903,8 +903,8 @@ footer{
       <button type="button" class="info-tip" aria-label="¿Cómo se calcula el tiempo estimado?">
         <span aria-hidden="true">i</span>
         <span class="info-tip-content" hidden>
-          Parte de un ritmo de 6:00/km en llano y lo ajusta por desnivel y altitud de la ruta. No incluye paradas.<br><br>
-          El ritmo en plano es solo un punto de partida — no captura tu fuerza para subir caminando rápido ni tu técnica bajando terreno técnico, así que trátalo como referencia, no como predicción exacta. Ajústalo según tu propio nivel.
+          <span id="stat-time-tip-base">Parte de un ritmo de 6:00/km en llano (el promedio) y lo ajusta por desnivel y altitud de la ruta. No incluye paradas.</span><br><br>
+          <span id="stat-time-tip-cta">El ritmo en plano es solo un punto de partida — no captura tu fuerza para subir caminando rápido ni tu técnica bajando terreno técnico, así que trátalo como referencia, no como predicción exacta. <a href="/" style="color:inherit;text-decoration:underline" onclick="openLoginModal();return false;">Regístrate</a> y configura tu ritmo real en tu perfil para afinar esta estimación.</span>
         </span>
       </button>
     </div>
@@ -1204,9 +1204,12 @@ async function renderAuthState(session){
     loggedOut.style.display = 'flex';
     loggedIn.style.display = 'none';
     closeOnboardingModal();
+    isLoggedIn = false;
     paceProfile = { flatSec: null, uphill: null, downhill: null };
+    refreshEstimatedTimeStat();
     return;
   }
+  isLoggedIn = true;
   loggedOut.style.display = 'none';
   loggedIn.style.display = 'flex';
   const email = session.user.email || '';
@@ -1229,8 +1232,10 @@ async function renderAuthState(session){
       uphill: profile.pace_uphill_rating || null,
       downhill: profile.pace_downhill_rating || null,
     };
+    refreshEstimatedTimeStat();
   } else {
     openOnboardingModal(session.user);
+    refreshEstimatedTimeStat();
   }
 }
 
@@ -1367,7 +1372,67 @@ let checkpoints = []; // { km, label, cutoffSec|null }
 // renderAuthState). All null means "behave exactly like an anonymous
 // visitor" — the flat 360 sec/km default and no uphill/downhill adjustment.
 let paceProfile = { flatSec: null, uphill: null, downhill: null };
+let isLoggedIn = false;
 const PACE_RATING_MULT = { dificil: 1.12, normal: 1.0, bueno: 0.92 };
+
+// Predicts total time with the same ITRA-style effort-distance heuristic
+// used to grade race difficulty worldwide (100m climbed / 200m descended ≈
+// 1 extra km), nudged by the user's own flat-pace and uphill/downhill
+// rating. Deliberately NOT the per-km Minetti model buildKmProfile()/
+// segMult() use for the race calculator's splits — that model is well
+// suited to redistributing a time the user already gave it across
+// segments, but on its own (predicting a total from scratch) it came out
+// far too optimistic on real routes: tested against a ~52km/2,940m D+
+// route it predicted 6h22m, an elite-level pace for what's labeled
+// "corredor entrenado" — vs. 9h55m from this ITRA-based formula, which
+// matches realistic ultra finish times far better. Minetti's curves model
+// metabolic cost per grade, not the fatigue that accumulates over hours,
+// so they work for relative pacing but understate absolute duration.
+// Reads the currently loaded route from the live gpxPoints/cumDistKm
+// globals, so it's always in sync with whatever's on screen.
+function computeSuggestedTimeSec(){
+  if (!gpxPoints.length) return 0;
+  const totalKm = cumDistKm[cumDistKm.length-1];
+  let gain = 0, loss = 0;
+  for (let i=1; i<gpxPoints.length; i++){
+    const de = gpxPoints[i].ele - gpxPoints[i-1].ele;
+    if (de > 0) gain += de; else loss += Math.abs(de);
+  }
+  const avgEle = gpxPoints.reduce((s,p)=>s+p.ele,0)/gpxPoints.length;
+  const upMult   = paceProfile.uphill ? PACE_RATING_MULT[paceProfile.uphill] : 1.0;
+  const downMult = paceProfile.downhill ? PACE_RATING_MULT[paceProfile.downhill] : 1.0;
+  const effortKm = totalKm + (gain/100)*upMult + (loss/200)*downMult;
+  const flatPaceS = paceProfile.flatSec || 360;
+  return effortKm * flatPaceS * altFactor(avgEle);
+}
+
+// Re-renders the "Tiempo estimado" stat and its help text off whatever
+// paceProfile currently holds — called both right after a route loads and
+// again once the logged-in user's profile finishes loading, since a route
+// is often auto-loaded (share link / own profile) concurrently with the
+// session/profile fetch, racing ahead of it.
+function refreshEstimatedTimeStat(){
+  const tipBase = document.getElementById('stat-time-tip-base');
+  const tipCta = document.getElementById('stat-time-tip-cta');
+  if (tipBase) {
+    tipBase.textContent = paceProfile.flatSec
+      ? `Estamos usando el ritmo que configuraste en tu perfil (${fmtPace(paceProfile.flatSec)}/km en llano) y lo ajustamos por desnivel y altitud de la ruta. No incluye paradas.`
+      : isLoggedIn
+      ? 'Parte de un ritmo de 6:00/km en llano (el promedio) porque aún no configuraste el tuyo. No incluye paradas.'
+      : 'Parte de un ritmo de 6:00/km en llano (el promedio) y lo ajusta por desnivel y altitud de la ruta. No incluye paradas.';
+  }
+  if (tipCta) {
+    if (isLoggedIn) {
+      tipCta.innerHTML = paceProfile.flatSec
+        ? 'El ritmo en plano es solo un punto de partida — no captura tu fuerza para subir caminando rápido ni tu técnica bajando terreno técnico, así que trátalo como referencia, no como predicción exacta.'
+        : 'Es solo un punto de partida, no una predicción exacta. <a href="/editar-perfil" style="color:inherit;text-decoration:underline">Configura tu ritmo real en tu perfil</a> para afinar esta estimación.';
+    } else {
+      tipCta.innerHTML = 'Es solo un punto de partida, no una predicción exacta. <a href="/" style="color:inherit;text-decoration:underline" onclick="openLoginModal();return false;">Regístrate</a> y configura tu ritmo real en tu perfil para afinarla.';
+    }
+  }
+  if (!gpxPoints.length) return;
+  document.getElementById('stat-time').textContent = fmtTimeHM(computeSuggestedTimeSec());
+}
 let currentGpxText = null, currentFilename = null;
 // Set when the loaded route already has a canonical share link — either it
 // was opened via one, or it was shared earlier this session. Re-sharing
@@ -1515,20 +1580,10 @@ function processGPX(xml, filename) {
                     effortScore < 60 ? ['Moderada','#c67c0e'] :
                     effortScore < 100 ? ['Difícil','#d9480f'] : ['Extrema','#c0392b'];
 
-  // Average elevation of the whole route
-  const avgEle = gpxPoints.reduce((s,p)=>s+p.ele,0)/gpxPoints.length;
-
-  // Suggested time for average trained trail runner
-  // Base pace: the user's own flat-pace if set, else 6:00/km (360 sec/km)
-  // Effort km = dist + D+/100 + D-/200 (ITRA-derived), nudged by the user's
-  // uphill/downhill self-rating if set
-  // Altitude factor applied on top
-  const upMult     = paceProfile.uphill ? PACE_RATING_MULT[paceProfile.uphill] : 1.0;
-  const downMult   = paceProfile.downhill ? PACE_RATING_MULT[paceProfile.downhill] : 1.0;
-  const effortKm   = totalKm + (gain/100)*upMult + (loss/200)*downMult;
-  const routeAltF  = altFactor(avgEle);
-  const flatPaceS  = paceProfile.flatSec || 360;
-  const suggestedS = effortKm * flatPaceS * routeAltF;
+  // Suggested time for average trained trail runner — see
+  // computeSuggestedTimeSec() for the formula and why it's not the same
+  // per-km model the race calculator uses for its splits.
+  const suggestedS = computeSuggestedTimeSec();
 
   // Update UI
   document.getElementById('route-name-text').textContent = name || filename || 'Mi Ruta';
@@ -2113,6 +2168,34 @@ function segMult(grade, avgEle){
   else if (grade < -.04 && paceProfile.downhill) m *= PACE_RATING_MULT[paceProfile.downhill];
   return m;
 }
+
+// Per-km breakdown of the currently loaded route (grade, gain/loss, avg
+// elevation, and the resulting pace multiplier) — shared by the race
+// calculator and the "Tiempo estimado" quick stat, so both predict time
+// off the same grade-by-grade Minetti-curve model instead of two different
+// formulas giving two different numbers for the same route.
+function buildKmProfile(){
+  const totalKm = cumDistKm[cumDistKm.length-1];
+  const kmP = [];
+  for (let km=1; km<=Math.ceil(totalKm); km++){
+    const s0=(km-1)*1000, s1=Math.min(km*1000,totalKm*1000);
+    const segLen=s1-s0;
+    let g=0,lo=0,pStart=null,pEnd=null,eleSum=0,eleCount=0;
+    for (let i=0;i<cumDistKm.length;i++){
+      const d=cumDistKm[i]*1000;
+      if (d>=s0&&d<=s1){
+        if (pStart===null) pStart=i; pEnd=i;
+        eleSum+=gpxPoints[i].ele; eleCount++;
+        if (i>0){const de=gpxPoints[i].ele-gpxPoints[i-1].ele;if(de>0)g+=de;else lo+=Math.abs(de);}
+      }
+    }
+    const netE=pStart!==null&&pEnd!==null?gpxPoints[pEnd].ele-gpxPoints[pStart].ele:0;
+    const grade=segLen>0?netE/segLen:0;
+    const avgSegEle=eleCount>0?eleSum/eleCount:0;
+    kmP.push({km,segLen:segLen/1000,grade,gain:Math.round(g),loss:Math.round(lo),avgEle:Math.round(avgSegEle),mult:segMult(grade,avgSegEle)});
+  }
+  return kmP;
+}
 function terrainInfo(g){
   if(g>.08)  return['Subida fuerte','t-up-hard','#c0392b'];
   if(g>.04)  return['Subida suave', 't-up-easy','#d9480f'];
@@ -2211,26 +2294,7 @@ function calcStrategy(){
 
   const splitBy=document.getElementById('split-by').value;
   const totalKm=cumDistKm[cumDistKm.length-1];
-
-  // Build km profile (with altitude per segment)
-  const kmP=[];
-  for(let km=1;km<=Math.ceil(totalKm);km++){
-    const s0=(km-1)*1000, s1=Math.min(km*1000,totalKm*1000);
-    const segLen=s1-s0;
-    let g=0,lo=0,pStart=null,pEnd=null,eleSum=0,eleCount=0;
-    for(let i=0;i<cumDistKm.length;i++){
-      const d=cumDistKm[i]*1000;
-      if(d>=s0&&d<=s1){
-        if(pStart===null)pStart=i; pEnd=i;
-        eleSum+=gpxPoints[i].ele; eleCount++;
-        if(i>0){const de=gpxPoints[i].ele-gpxPoints[i-1].ele;if(de>0)g+=de;else lo+=Math.abs(de);}
-      }
-    }
-    const netE=pStart!==null&&pEnd!==null?gpxPoints[pEnd].ele-gpxPoints[pStart].ele:0;
-    const grade=segLen>0?netE/segLen:0;
-    const avgSegEle=eleCount>0?eleSum/eleCount:0;
-    kmP.push({km,segLen:segLen/1000,grade,gain:Math.round(g),loss:Math.round(lo),avgEle:Math.round(avgSegEle),mult:segMult(grade,avgSegEle)});
-  }
+  const kmP=buildKmProfile();
 
   const totalEff=kmP.reduce((s,k)=>s+k.segLen*k.mult,0);
   const basePace=tgt/totalEff;
