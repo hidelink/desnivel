@@ -395,6 +395,62 @@ select.sinp{
 .calc-btn:hover{background:var(--orange2);}
 .calc-btn:active{transform:scale(.97);}
 
+
+.inp-optional{font-size:10px;text-transform:none;letter-spacing:0;color:var(--muted2);}
+.start-input{
+  background:var(--s1);border:1px solid var(--border2);color:var(--text);
+  border-radius:9px;padding:0 12px;height:44px;font-size:15px;font-weight:700;outline:none;
+}
+.band-actions{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:20px;}
+.band-btn{
+  background:var(--s3);color:var(--text);border:1px solid var(--border2);height:40px;
+  padding:0 16px;border-radius:9px;font-size:13px;font-weight:700;cursor:pointer;
+  transition:background .2s;white-space:nowrap;
+}
+.band-btn:hover{background:var(--border2);}
+
+/* Pace band: lives off-screen and only shows when printing (the page toggles
+   body.printing-band around window.print()), sized in mm for an A4 sheet. */
+#pace-band-print{display:none;}
+@page{size:A4;margin:10mm;}
+@media print{
+  body.printing-band > *:not(#pace-band-print){display:none !important;}
+  body.printing-band{background:#fff !important;}
+  body.printing-band #pace-band-print{display:block;-webkit-print-color-adjust:exact;print-color-adjust:exact;color:#1a1a1a;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;}
+  .pb-hint{font-size:7.5pt;color:#8a8472;text-align:center;margin-bottom:3mm;}
+  .pb-sheet{display:flex;justify-content:space-between;align-items:flex-start;width:190mm;}
+  .pb-band{width:60mm;box-sizing:border-box;padding:0 2.2mm;border-left:0.3mm dashed #9a9484;}
+  .pb-band:first-child{border-left:none;}
+  .pb-top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:1.5mm;}
+  .pb-logo{font-weight:800;font-size:10pt;}
+  .pb-logo span{color:#e8650a;}
+  .pb-title{font-size:7.5pt;font-weight:700;color:#e8650a;text-transform:uppercase;letter-spacing:.3pt;}
+  .pb-name{font-weight:800;font-size:10pt;line-height:1.2;}
+  .pb-sub{font-size:7pt;color:#5c574a;margin:0.8mm 0 2mm;}
+  .pb-head{display:grid;grid-template-columns:8.5mm 20mm 11mm 14mm;font-size:6.5pt;color:#8a8472;padding:2mm 0.6mm 0.6mm;border-bottom:0.3mm solid #1a1a1a;}
+  .pb-head span:last-child{text-align:right;}
+  .pb-row{display:grid;grid-template-columns:8.5mm 20mm 11mm 14mm;align-items:center;height:5.4mm;font-size:7pt;padding:0 0.6mm;border-bottom:0.15mm solid #e4dfd2;}
+  .pb-row .k{font-weight:800;font-size:8pt;}
+  .pb-row .r{color:#5c574a;}
+  .pb-row .pb-mid{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .pb-row .t{text-align:right;font-weight:800;font-size:8pt;}
+  .pb-up{background:#fdf0e4;}
+  .pb-dn{background:#e8f4ea;}
+  .pb-cp{background:#1a1a1a;color:#fff;border-bottom:none;}
+  .pb-cp .r{color:#ddd8ca;}
+  .pb-row.pb-fin,.pb-cprow.pb-fin{background:#e8650a;color:#fff;border-bottom:none;}
+  .pb-row.pb-fin .r,.pb-cprow.pb-fin .pb-cpsub{color:#fff;}
+  .pb-cprow{display:grid;grid-template-columns:8mm 1fr 15mm;align-items:center;gap:1mm;padding:1.6mm 1mm;border-bottom:0.15mm solid #e4dfd2;}
+  .pb-cpk{font-weight:800;font-size:11pt;color:#e8650a;}
+  .pb-cprow.pb-fin .pb-cpk{color:#fff;}
+  .pb-cpname{font-weight:800;font-size:8.5pt;line-height:1.15;}
+  .pb-cpsub{font-size:6.5pt;color:#5c574a;margin-top:0.4mm;}
+  .pb-cpt{text-align:right;font-weight:800;font-size:9pt;}
+  .pb-cpt small{display:block;font-weight:400;font-size:6.5pt;color:#8a8472;}
+  .pb-cprow.pb-fin .pb-cpt small{color:#fff;}
+  .pb-foot{font-size:6.5pt;color:#8a8472;text-align:center;margin-top:2.5mm;}
+}
+
 /* checkpoints */
 .checkpoints-block{
   background:var(--s1);border:1px solid var(--border);border-radius:11px;
@@ -681,6 +737,7 @@ footer{
 </div>
 
 <div id="toast-container"></div>
+<div id="pace-band-print"></div>
 
 <!-- LOGIN MODAL -->
 <div id="login-overlay" onclick="if(event.target===this) closeLoginModal()">
@@ -962,6 +1019,10 @@ footer{
         </div>
       </div>
       <div class="inp-group">
+        <label>Hora de salida <span class="inp-optional">(opcional)</span></label>
+        <input type="time" id="inp-start" class="start-input">
+      </div>
+      <div class="inp-group">
         <label>Dividir por</label>
         <select class="sinp" id="split-by">
           <option value="km">Kilómetros</option>
@@ -993,6 +1054,10 @@ footer{
         <div class="smeta"><div class="smeta-label">Ritmo promedio</div><div class="smeta-val" id="s-avg-pace">—</div></div>
         <div class="smeta"><div class="smeta-label">Ritmo ajustado trail</div><div class="smeta-val" id="s-trail-pace">—</div></div>
         <div class="smeta"><div class="smeta-label">Km equivalente plano</div><div class="smeta-val" id="s-equiv-dist">—</div></div>
+      </div>
+      <div class="band-actions">
+        <button type="button" class="band-btn" onclick="printPaceBand()">Imprimir banda de ritmo</button>
+        <button type="button" class="band-btn" onclick="downloadPhoneBand()">Imagen para el teléfono</button>
       </div>
       <div id="checkpoint-results"></div>
       <div class="tbl-wrap">
@@ -1628,6 +1693,7 @@ function processGPX(xml, filename) {
   checkpoints = [];
   renderCheckpointList();
   document.getElementById('strategy-result').style.display = 'none';
+  lastStrategy = null;
   document.getElementById('share-result').classList.remove('show');
 }
 
@@ -2297,10 +2363,275 @@ function renderCheckpointResults(kmP, basePace, totalKm){
     return `<div class="cpr-row">
       <span class="cpr-km">Km ${c.km}</span>
       ${c.label ? `<span class="cpr-label">${escapeHtml(c.label)}</span>` : ''}
-      <span class="cpr-eta">llegas ~${fmtTimeHM(etaSec)}</span>
+      <span class="cpr-eta">llegas ~${fmtTimeHM(etaSec)}${parseStartMin()!=null?` (${fmtClock(parseStartMin(),etaSec)})`:''}</span>
       ${cutoffHtml}
     </div>`;
   }).join('');
+}
+
+// ── PACE BAND ──────────────────────────────────────────────
+// Printable wrist/bottle bands and a phone-wallpaper image, both built from
+// the same per-km model the calculator table uses (kmP + basePace), so the
+// numbers on paper always match what's on screen. Set by calcStrategy().
+let lastStrategy = null;
+
+function parseStartMin(){
+  const v = document.getElementById('inp-start').value;
+  if (!v) return null;
+  const [h, m] = v.split(':').map(Number);
+  return h * 60 + m;
+}
+function fmtElapsed(sec){
+  const t = Math.round(sec / 60);
+  return `${Math.floor(t / 60)}:${String(t % 60).padStart(2, '0')}`;
+}
+// Clock time for a given elapsed time and start; "+1" marks the next day
+// (overnight ultras), so 01:30 isn't mistaken for the start of the race.
+function fmtClock(startMin, sec){
+  const t = Math.round(startMin + sec / 60);
+  const day = Math.floor(t / 1440);
+  const r = ((t % 1440) + 1440) % 1440;
+  const s = `${String(Math.floor(r / 60)).padStart(2, '0')}:${String(r % 60).padStart(2, '0')}`;
+  return day > 0 ? `${s} +${day}` : s;
+}
+
+// The marks of one band: every `step` km (or checkpoints only when step is
+// 0), always including the finish. Each carries the pace, climb and descent
+// of the stretch since the previous mark, prorated across the km bins it
+// spans so a checkpoint at km 12.4 doesn't borrow a whole extra bin.
+function bandRows(step){
+  const { kmP, basePace, totalKm } = lastStrategy;
+  const set = new Map();
+  if (step > 0) for (let k = step; k < totalKm - 0.05; k += step) set.set(+k.toFixed(2), null);
+  checkpoints.forEach(c => { if (c.km > 0 && c.km < totalKm - 0.05) set.set(c.km, c); });
+  set.set(totalKm, 'finish');
+  const marks = [...set.entries()].sort((a, b) => a[0] - b[0]);
+
+  const rows = [];
+  let prev = 0, prevEta = 0;
+  for (const [km, tag] of marks) {
+    const eta = etaAtKm(km, kmP, basePace);
+    let gain = 0, loss = 0;
+    for (const b of kmP) {
+      const bs = b.km - 1, be = bs + b.segLen;
+      const overlap = Math.min(km, be) - Math.max(prev, bs);
+      if (overlap > 0 && b.segLen > 0) { gain += b.gain * overlap / b.segLen; loss += b.loss * overlap / b.segLen; }
+    }
+    const len = km - prev;
+    const paceSec = len > 0 ? (eta - prevEta) / len : 0;
+    const grade = len > 0 ? (gain - loss) / (len * 1000) : 0;
+    rows.push({
+      km, eta, paceSec, gain, loss,
+      kind: grade > 0.04 ? 'up' : grade < -0.04 ? 'dn' : gain + loss > len * 1000 * 0.08 ? 'roll' : 'flat',
+      isFinish: tag === 'finish',
+      cp: tag && tag !== 'finish' ? tag : null,
+    });
+    prev = km; prevEta = eta;
+  }
+  return rows;
+}
+
+function bandTerrainText(r){
+  return r.kind === 'up' ? `↑ +${Math.round(r.gain)}` : r.kind === 'dn' ? `↓ −${Math.round(r.loss)}`
+    : r.kind === 'roll' ? `↑${Math.round(r.gain)} ↓${Math.round(r.loss)}` : '→ plano';
+}
+function bandKmLabel(r){ return r.isFinish ? 'Meta' : String(+r.km.toFixed(1)); }
+
+function bandProfileSvg(w, h){
+  const n = Math.min(120, gpxPoints.length);
+  const idx = Array.from({ length: n }, (_, i) => Math.round(i * (gpxPoints.length - 1) / Math.max(1, n - 1)));
+  const eles = idx.map(i => gpxPoints[i].ele);
+  const mn = Math.min(...eles), mx = Math.max(...eles), range = Math.max(mx - mn, 1);
+  const total = cumDistKm[cumDistKm.length - 1] || 1;
+  const pts = idx.map((i, j) => [(cumDistKm[i] / total) * w, h - 2 - ((eles[j] - mn) / range) * (h - 6)]);
+  const d = pts.map((p, i) => `${i ? 'L' : 'M'}${p[0].toFixed(1)},${p[1].toFixed(1)}`).join('');
+  const dots = checkpoints.filter(c => c.km > 0 && c.km < total).map(c => {
+    let best = 0, bd = Infinity;
+    idx.forEach((i, j) => { const dd = Math.abs(cumDistKm[i] - c.km); if (dd < bd) { bd = dd; best = j; } });
+    return `<circle cx="${pts[best][0].toFixed(1)}" cy="${pts[best][1].toFixed(1)}" r="2.6" fill="#1a1a1a" stroke="#fff" stroke-width="1"/>`;
+  }).join('');
+  return `<svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" style="display:block;width:100%;height:${h * 0.2646}mm"><path d="${d}L${w},${h}L0,${h}Z" fill="#e8650a" fill-opacity="0.18"/><path d="${d}" fill="none" stroke="#e8650a" stroke-width="1.4" vector-effect="non-scaling-stroke"/>${dots}</svg>`;
+}
+
+function paceBandHtml(title, step){
+  const S = lastStrategy;
+  const startMin = parseStartMin();
+  const rows = bandRows(step);
+  const name = (document.getElementById('route-name-text').textContent || 'Ruta').trim();
+  const totalGain = S.kmP.reduce((s, k) => s + k.gain, 0);
+  const timeOf = r => startMin != null ? fmtClock(startMin, r.eta) : fmtElapsed(r.eta);
+  const meta = `Meta ${fmtElapsed(S.tgt)}` + (startMin != null ? ` · Salida ${fmtClock(startMin, 0)}` : '');
+
+  let body = '';
+  if (step === 0) {
+    body = rows.map(r => {
+      let sub;
+      if (r.isFinish) sub = `${fmtPace(r.paceSec)} /km desde el anterior`;
+      else if (r.cp.cutoffSec != null) {
+        const margin = r.cp.cutoffSec - r.eta;
+        sub = `corte ${fmtElapsed(r.cp.cutoffSec)} · ${margin >= 0 ? 'sobran' : 'tarde'} ${fmtElapsed(Math.abs(margin))}`;
+      } else sub = `${fmtPace(r.paceSec)} /km desde el anterior`;
+      const name2 = r.isFinish ? 'Meta' : (r.cp.label || `Km ${bandKmLabel(r)}`);
+      return `<div class="pb-cprow ${r.isFinish ? 'pb-fin' : ''}">
+        <div class="pb-cpk">${r.isFinish ? '' : escapeHtml(bandKmLabel(r))}</div>
+        <div class="pb-cpmain"><div class="pb-cpname">${escapeHtml(name2)}</div><div class="pb-cpsub">${escapeHtml(sub)}</div></div>
+        <div class="pb-cpt">${escapeHtml(timeOf(r))}${startMin != null ? `<small>${fmtElapsed(r.eta)}</small>` : ''}</div>
+      </div>`;
+    }).join('');
+  } else {
+    body = `<div class="pb-head"><span>Km</span><span>Terreno</span><span>Ritmo</span><span>${startMin != null ? 'Hora' : 'Llegada'}</span></div>` +
+      rows.map(r => {
+        const cls = r.isFinish ? 'pb-fin' : r.cp ? 'pb-cp' : r.kind === 'up' ? 'pb-up' : r.kind === 'dn' ? 'pb-dn' : '';
+        const mid = r.cp ? escapeHtml(r.cp.label || 'Checkpoint') : r.isFinish ? `${bandKmLabel({ ...r, isFinish: false })} km` : bandTerrainText(r);
+        return `<div class="pb-row ${cls}"><span class="k">${escapeHtml(bandKmLabel(r))}</span><span class="r pb-mid">${mid}</span><span class="r">${fmtPace(r.paceSec)}</span><span class="t">${escapeHtml(timeOf(r))}</span></div>`;
+      }).join('');
+  }
+
+  return `<div class="pb-band">
+    <div class="pb-top"><span class="pb-logo">Desni<span>vel</span></span><span class="pb-title">${escapeHtml(title)}</span></div>
+    <div class="pb-name">${escapeHtml(name)}</div>
+    <div class="pb-sub">${S.totalKm.toFixed(1)} km · +${Math.round(totalGain).toLocaleString('en-US')} m · ${meta}</div>
+    ${bandProfileSvg(180, 34)}
+    ${body}
+    <div class="pb-foot">desnivel.run</div>
+  </div>`;
+}
+
+// Three bands on one A4 sheet: a dense one, a sparse one, and one with just
+// the checkpoints (falling back to a still sparser one when the route has
+// none) — so there's a band for each moment: glancing mid-effort, planning
+// the next stretch, and checking aid-station times.
+function paceBandSheetHtml(){
+  const total = lastStrategy.totalKm;
+  const [a, b] = total <= 45 ? [2, 5] : total <= 110 ? [5, 10] : [10, 20];
+  const hasCps = checkpoints.some(c => c.km > 0 && c.km < total - 0.05);
+  const third = hasCps ? { t: 'Checkpoints', s: 0 } : { t: `Cada ${b * 2} km`, s: b * 2 };
+  return `<div class="pb-hint">Recorta por las líneas punteadas · desnivel.run</div>
+    <div class="pb-sheet">${paceBandHtml(`Cada ${a} km`, a)}${paceBandHtml(`Cada ${b} km`, b)}${paceBandHtml(third.t, third.s)}</div>`;
+}
+
+function printPaceBand(){
+  if (!lastStrategy) { showToast('Calcula la estrategia primero.'); return; }
+  const box = document.getElementById('pace-band-print');
+  box.innerHTML = paceBandSheetHtml();
+  document.body.classList.add('printing-band');
+  const done = () => { document.body.classList.remove('printing-band'); box.innerHTML = ''; window.removeEventListener('afterprint', done); };
+  window.addEventListener('afterprint', done);
+  window.print();
+}
+
+// Vertical image sized for a modern phone lock screen: the clock owns the
+// top quarter and the shortcuts the bottom edge, so everything sits in the
+// middle band. The step adapts so the table always stays readable.
+function downloadPhoneBand(){
+  if (!lastStrategy) { showToast('Calcula la estrategia primero.'); return; }
+  const S = lastStrategy;
+  const startMin = parseStartMin();
+  const W = 1179, H = 2556, M = 90, CW = W - 2 * M;
+  const FONT = '-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif';
+
+  let rows = null;
+  for (const step of [1, 2, 5, 10, 20, 25, 50, 100]) {
+    const r = bandRows(step);
+    if (r.length <= 14) { rows = r; break; }
+  }
+  if (!rows) rows = bandRows(100);
+
+  const c = document.createElement('canvas');
+  c.width = W; c.height = H;
+  const g = c.getContext('2d');
+  g.fillStyle = '#101010'; g.fillRect(0, 0, W, H);
+
+  const name = (document.getElementById('route-name-text').textContent || 'Ruta').trim();
+  const totalGain = S.kmP.reduce((s, k) => s + k.gain, 0);
+  const ROW = 84, headH = 330, profH = 170, colH = 60, footH = 90;
+  const contentH = headH + profH + 40 + colH + rows.length * ROW + footH;
+  let y = Math.max(560, Math.round((2420 - contentH) / 2) + 60);
+
+  const fit = (txt, maxW) => { let t = txt; while (g.measureText(t).width > maxW && t.length > 1) t = t.slice(0, -1); return t === txt ? t : t.replace(/\s*$/, '') + '…'; };
+
+  g.textBaseline = 'alphabetic';
+  g.fillStyle = '#f4f2ee'; g.font = `800 40px ${FONT}`; g.fillText('Desni', M, y + 40);
+  const wDesni = g.measureText('Desni').width;
+  g.fillStyle = '#e8650a'; g.fillText('vel', M + wDesni, y + 40);
+
+  g.fillStyle = '#f4f2ee'; g.font = `800 66px ${FONT}`;
+  g.fillText(fit(name, CW), M, y + 128);
+  g.fillStyle = '#a39d8e'; g.font = `500 34px ${FONT}`;
+  g.fillText(`Meta ${fmtElapsed(S.tgt)}` + (startMin != null ? `  ·  Salida ${fmtClock(startMin, 0)}` : ''), M, y + 184);
+  g.fillText(`${S.totalKm.toFixed(1)} km  ·  +${Math.round(totalGain).toLocaleString('en-US')} m  ·  ${fmtPace(S.tgt / S.totalKm)} /km`, M, y + 232);
+  y += headH;
+
+  // Elevation profile
+  const n = Math.min(160, gpxPoints.length);
+  const idx = Array.from({ length: n }, (_, i) => Math.round(i * (gpxPoints.length - 1) / Math.max(1, n - 1)));
+  const eles = idx.map(i => gpxPoints[i].ele);
+  const mn = Math.min(...eles), mx = Math.max(...eles), range = Math.max(mx - mn, 1);
+  const px = idx.map(i => M + (cumDistKm[i] / S.totalKm) * CW);
+  const py = eles.map(e => y + profH - 8 - ((e - mn) / range) * (profH - 24));
+  g.beginPath(); g.moveTo(px[0], y + profH);
+  px.forEach((x, i) => g.lineTo(x, py[i]));
+  g.lineTo(px[px.length - 1], y + profH); g.closePath();
+  g.fillStyle = 'rgba(232,101,10,.2)'; g.fill();
+  g.beginPath(); px.forEach((x, i) => (i ? g.lineTo(x, py[i]) : g.moveTo(x, py[i])));
+  g.strokeStyle = '#e8650a'; g.lineWidth = 4; g.lineJoin = 'round'; g.stroke();
+  checkpoints.filter(cp => cp.km > 0 && cp.km < S.totalKm).forEach(cp => {
+    let best = 0, bd = Infinity;
+    idx.forEach((i, j) => { const d = Math.abs(cumDistKm[i] - cp.km); if (d < bd) { bd = d; best = j; } });
+    g.beginPath(); g.arc(px[best], py[best], 11, 0, Math.PI * 2);
+    g.fillStyle = '#ffffff'; g.fill(); g.lineWidth = 5; g.strokeStyle = '#101010'; g.stroke();
+  });
+  y += profH + 40;
+
+  // Column headers
+  g.fillStyle = '#7d786b'; g.font = `500 26px ${FONT}`;
+  g.fillText('KM', M + 20, y + 34);
+  g.fillText('TERRENO', M + 190, y + 34);
+  g.fillText('RITMO', M + 520, y + 34);
+  g.textAlign = 'right';
+  if (startMin != null) { g.fillText('TRANSC.', M + 800, y + 34); g.fillText('HORA', M + CW - 20, y + 34); }
+  else g.fillText('LLEGADA', M + CW - 20, y + 34);
+  g.textAlign = 'left';
+  y += colH;
+
+  rows.forEach(r => {
+    const top = y, mid = y + ROW / 2 + 13;
+    const fill = r.isFinish ? '#e8650a' : r.cp ? '#2a2a2a' : r.kind === 'up' ? 'rgba(232,101,10,.12)' : r.kind === 'dn' ? 'rgba(47,158,68,.14)' : null;
+    if (fill) { g.fillStyle = fill; g.beginPath(); g.roundRect(M, top + 4, CW, ROW - 8, 14); g.fill(); }
+    if (r.cp && !r.isFinish) { g.fillStyle = '#e8650a'; g.beginPath(); g.roundRect(M, top + 4, 8, ROW - 8, 4); g.fill(); }
+    const strong = r.isFinish ? '#ffffff' : '#f4f2ee';
+    const soft = r.isFinish ? '#ffffff' : '#b9b3a3';
+    g.fillStyle = strong; g.font = `800 38px ${FONT}`;
+    g.fillText(bandKmLabel(r), M + 20, mid);
+    g.font = `${r.cp ? 800 : 500} 34px ${FONT}`;
+    g.fillStyle = r.cp && !r.isFinish ? '#ffffff' : soft;
+    const midTxt = r.isFinish ? `${r.km.toFixed(1)} km` : r.cp ? (r.cp.label || 'Checkpoint') : bandTerrainText(r);
+    g.fillText(fit(midTxt, 320), M + 190, mid);
+    g.fillStyle = soft; g.font = `500 34px ${FONT}`;
+    g.fillText(fmtPace(r.paceSec), M + 520, mid);
+    g.textAlign = 'right';
+    if (startMin != null) {
+      g.fillStyle = soft; g.font = `500 32px ${FONT}`; g.fillText(fmtElapsed(r.eta), M + 800, mid);
+      g.fillStyle = strong; g.font = `800 40px ${FONT}`; g.fillText(fmtClock(startMin, r.eta), M + CW - 20, mid);
+    } else {
+      g.fillStyle = strong; g.font = `800 40px ${FONT}`; g.fillText(fmtElapsed(r.eta), M + CW - 20, mid);
+    }
+    g.textAlign = 'left';
+    y += ROW;
+  });
+
+  g.fillStyle = '#6f6a5d'; g.font = `500 28px ${FONT}`; g.textAlign = 'center';
+  g.fillText('desnivel.run', W / 2, y + 62);
+
+  const slug = name.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 40) || 'ruta';
+  c.toBlob(blob => {
+    if (!blob) { showToast('No se pudo generar la imagen.'); return; }
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `ritmo-${slug}.png`;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+  }, 'image/png');
 }
 
 function calcStrategy(){
@@ -2319,6 +2650,8 @@ function calcStrategy(){
   const totalGain=kmP.reduce((s,k)=>s+k.gain,0);
   const totalLoss=kmP.reduce((s,k)=>s+k.loss,0);
   const equiv=totalKm+totalGain/100+totalLoss/200;
+  lastStrategy={kmP,basePace,totalKm,tgt};
+  const startMin=parseStartMin();
 
   document.getElementById('s-avg-pace').textContent=fmtPace(tgt/totalKm)+' /km';
   document.getElementById('s-trail-pace').textContent=fmtPace(tgt/equiv)+' /km';
@@ -2349,7 +2682,7 @@ function calcStrategy(){
   document.getElementById('table-head').innerHTML=`<tr>
     <th>${splitBy==='km'?'Km':'Sección'}</th><th>Terreno</th><th>D+ / D−</th>
     ${showAlt?'<th>Altitud</th>':''}
-    <th>Ritmo</th><th>Esfuerzo</th><th>Tiempo acum.</th></tr>`;
+    <th>Ritmo</th><th>Esfuerzo</th><th>Tiempo acum.</th>${startMin!=null?'<th>Hora</th>':''}</tr>`;
 
   let acc=0;
   const tb=document.getElementById('strategy-table');
@@ -2380,6 +2713,7 @@ function calcStrategy(){
       <td><span class="pace-bold">${fmtPace(pace)}</span><span class="muted-sm"> /km</span></td>
       <td class="ebar"><div class="ebar-bg"><div class="ebar-fill" style="width:${pct}%;background:${col}"></div></div></td>
       <td class="accum">${fmtTime(acc)}</td>
+      ${startMin!=null?`<td class="accum">${fmtClock(startMin,acc)}</td>`:''}
     </tr>`;
   });
   document.getElementById('strategy-result').style.display='block';
