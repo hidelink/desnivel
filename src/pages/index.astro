@@ -1740,6 +1740,9 @@ function applyRoutePlan(plan){
     return;
   }
   processGPX(plan.gpx, plan.name || plan.filename || 'Mi ruta');
+  // processGPX() prefers the track name embedded inside the GPX file over the
+  // name it's handed, which would silently undo a rename saved to plan.name.
+  if (plan.name) document.getElementById('route-name-text').textContent = plan.name;
   // processGPX() already called renderMap()/renderChart() with checkpoints
   // reset to [] — redraw the markers/chart lines now that the real ones
   // (if any) are in, instead of assuming they're always empty.

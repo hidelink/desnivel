@@ -141,6 +141,8 @@ main{max-width:1000px;margin:0 auto;padding:48px 24px 80px;}
   display:flex;flex-direction:column;gap:10px;
 }
 .route-card-name{font-size:15px;font-weight:700;color:var(--text);}
+.route-card-name a{color:inherit;}
+.route-card-name a:hover{color:var(--orange);}
 .route-card-location{display:flex;align-items:center;gap:4px;font-size:12px;color:var(--muted);margin-top:-4px;}
 .route-card-stats{display:flex;gap:14px;font-size:12.5px;color:var(--muted);}
 .route-card-stats b{color:var(--text);}
@@ -385,7 +387,7 @@ function routeCardHtml(row, isOwner){
         ${row.is_hidden ? '<span class="hidden-badge">OCULTA</span>' : ''}
         ${ownerActions}
       </div>
-      <div class="route-card-name">${escapeHtml(name)}</div>
+      <div class="route-card-name"><a href="/r/${encodeURIComponent(row.id)}">${escapeHtml(name)}</a></div>
       ${row.location ? `
       <div class="route-card-location">
         <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
