@@ -855,7 +855,7 @@ footer{
       <button class="logout-btn" onclick="logout()">Salir</button>
     </div>
   </div>
-  <input type="file" id="file-input" accept=".gpx" onchange="handleFile(this.files[0])">
+  <input type="file" id="file-input" accept=".gpx,.xml,application/gpx+xml,application/xml,text/xml,application/octet-stream" onchange="handleFile(this.files[0]);this.value=''">
 </header>
 
 <!-- DROP ZONE -->
@@ -1522,14 +1522,28 @@ let map = null, elevChart = null;
 let hoverMarker = null, gradeLines = [], checkpointMarkers = [];
 
 // ── FILE ───────────────────────────────────────────────────
+// Phones are far less predictable than desktops about what a picked file
+// is called — a GPX shared through another app can arrive as
+// "route.gpx.xml" or with no extension at all — so the check is on the
+// content (<gpx>), not the file name, and every way this can fail says so
+// instead of silently doing nothing.
 function handleFile(file) {
-  if (!file || !file.name.toLowerCase().endsWith('.gpx')) return;
+  if (!file) return;
   document.getElementById('loading').classList.add('show');
   currentShareId = null;
   const r = new FileReader();
+  r.onerror = () => {
+    document.getElementById('loading').classList.remove('show');
+    showToast('No se pudo leer el archivo. Intenta de nuevo o súbelo desde otra ubicación.');
+  };
   r.onload = e => {
     try {
-      processGPX(e.target.result, file.name.replace(/\.gpx$/i,'').replace(/_/g,' '));
+      const text = e.target.result;
+      if (typeof text !== 'string' || !/<gpx[\s>]/i.test(text)) {
+        showToast(`"${file.name}" no parece un archivo GPX.`);
+        return;
+      }
+      processGPX(text, file.name.replace(/\.(xml|txt)$/i,'').replace(/\.gpx$/i,'').replace(/_/g,' '));
       // Delayed so the animated stat counters (900ms) have settled before
       // buildRoutePlan() reads their displayed text for the plan summary.
       setTimeout(autoSaveIfLoggedIn, 1000);
