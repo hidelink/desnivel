@@ -8,6 +8,12 @@
 [functions]
   directory = "netlify/functions"
 
+# resvg is a native module (platform-specific binary package), so it can't be
+# bundled into the function file — ship it as a real node_modules dependency,
+# along with the Linux binary Lambda actually loads.
+[functions."route-og-image"]
+  external_node_modules = ["@resvg/resvg-js", "@resvg/resvg-js-linux-x64-gnu"]
+
 # Clean profile URLs (/hidelink instead of /perfil?u=hidelink). A rewrite
 # (status 200, not a redirect), so the address bar keeps the clean path —
 # perfil.astro reads the username back out of that same path client-side,
@@ -20,11 +26,10 @@
   to = "/perfil"
   status = 200
 
-# Clean share links (/r/gornergrat-4f8a2c instead of /?r=gornergrat-4f8a2c).
-# Two path segments, so it can never collide with the single-segment
-# /:username rule above — index.astro reads the id back out of
-# location.pathname client-side, same reasoning as the profile rewrite.
-[[redirects]]
-  from = "/r/:id"
-  to = "/"
-  status = 200
+# Clean share links (/r/gornergrat-4f8a2c). Handled by the route-page
+# function (see its config.path) rather than a plain rewrite to "/", so each
+# link can carry its own title/description/preview image in the <head> —
+# the analyzer page is otherwise static, and link-preview crawlers don't run
+# JavaScript. The page still reads the id back out of location.pathname
+# client-side, same as before. Its preview image is /og/<id>.png
+# (route-og-image function).
