@@ -110,6 +110,10 @@ h1{font-size:26px;font-weight:800;color:var(--text);letter-spacing:-.4px;margin-
   width:22px;height:22px;border-radius:50%;color:#fff;font-size:10.5px;font-weight:700;
   display:flex;align-items:center;justify-content:center;flex-shrink:0;
 }
+.route-thumb{display:block;background:var(--bg);border-radius:10px;overflow:hidden;}
+.route-thumb svg{display:block;width:100%;}
+.route-thumb .thumb-trace{height:auto;}
+.route-thumb .thumb-elev{height:34px;border-top:1px solid var(--border);}
 .route-card-name{font-size:15px;font-weight:700;color:var(--text);}
 .route-card-name a{color:inherit;}
 .route-card-name a:hover{color:var(--orange);}
@@ -230,6 +234,79 @@ function avatarVisual(avatarUrl, color, initial){
   return { style: `background:${color || '#e8650a'}`, text: escapeHtml((initial || '?').toUpperCase()) };
 }
 
+// Mini thumbnail drawn straight from the route's own GPX: its shape on top
+// (projected with cos(lat) so it isn't stretched) and its elevation
+// silhouette underneath. No map tiles — just enough to recognize a route
+// at a glance. Parsed results are cached since a card can re-render.
+const thumbCache = new Map();
+function routeThumbHtml(routeId, gpx){
+  if (!gpx) return '';
+  if (thumbCache.has(routeId)) return thumbCache.get(routeId);
+  let html = '';
+  try { html = buildRouteThumb(routeId, gpx); } catch (e) { html = ''; }
+  thumbCache.set(routeId, html);
+  return html;
+}
+
+function buildRouteThumb(routeId, gpx){
+  const doc = new DOMParser().parseFromString(gpx, 'text/xml');
+  let nodes = doc.querySelectorAll('trkpt');
+  if (!nodes.length) nodes = doc.querySelectorAll('rtept');
+  const all = [];
+  nodes.forEach(n => {
+    const lat = parseFloat(n.getAttribute('lat')), lon = parseFloat(n.getAttribute('lon'));
+    const e = n.querySelector('ele');
+    if (!isNaN(lat) && !isNaN(lon)) all.push({ lat, lon, ele: e ? parseFloat(e.textContent) : NaN });
+  });
+  if (all.length < 2) return '';
+
+  const MAX = 120;
+  const step = Math.max(1, Math.floor(all.length / MAX));
+  const pts = all.filter((_, i) => i % step === 0);
+  if (pts[pts.length - 1] !== all[all.length - 1]) pts.push(all[all.length - 1]);
+
+  // Trace
+  const W = 280, H = 110, PAD = 14;
+  const minLat = Math.min(...pts.map(p => p.lat)), maxLat = Math.max(...pts.map(p => p.lat));
+  const minLon = Math.min(...pts.map(p => p.lon)), maxLon = Math.max(...pts.map(p => p.lon));
+  const k = Math.cos(((minLat + maxLat) / 2) * Math.PI / 180);
+  const w = Math.max((maxLon - minLon) * k, 1e-9), h = Math.max(maxLat - minLat, 1e-9);
+  const scale = Math.min((W - 2 * PAD) / w, (H - 2 * PAD) / h);
+  const offX = (W - w * scale) / 2, offY = (H - h * scale) / 2;
+  const xy = pts.map(p => [offX + (p.lon - minLon) * k * scale, offY + (maxLat - p.lat) * scale]);
+  const d = xy.map((c, i) => `${i ? 'L' : 'M'}${c[0].toFixed(1)},${c[1].toFixed(1)}`).join('');
+  const [sx, sy] = xy[0], [ex, ey] = xy[xy.length - 1];
+  const trace = `<svg class="thumb-trace" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <path d="${d}" fill="none" stroke="#e8650a" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="${sx.toFixed(1)}" cy="${sy.toFixed(1)}" r="4" fill="#fff" stroke="#4fc3f7" stroke-width="2.2"/>
+    ${Math.hypot(ex - sx, ey - sy) > 8 ? `<circle cx="${ex.toFixed(1)}" cy="${ey.toFixed(1)}" r="4" fill="#fff" stroke="#1a1a1a" stroke-width="2.2"/>` : ''}
+  </svg>`;
+
+  // Elevation silhouette (x = distance covered, so steep/flat parts keep their real proportions)
+  let elev = '';
+  const eles = pts.map(p => p.ele);
+  if (eles.every(e => !isNaN(e))) {
+    const dist = [0];
+    for (let i = 1; i < pts.length; i++) {
+      const dy = (pts[i].lat - pts[i-1].lat), dx = (pts[i].lon - pts[i-1].lon) * k;
+      dist.push(dist[i-1] + Math.sqrt(dx*dx + dy*dy));
+    }
+    const total = dist[dist.length - 1] || 1;
+    const minE = Math.min(...eles), maxE = Math.max(...eles);
+    const range = maxE - minE;
+    if (range > 5) {
+      const EW = 280, EH = 34, EP = 4;
+      const ep = pts.map((p, i) => [(dist[i] / total) * EW, EH - EP - ((p.ele - minE) / range) * (EH - 2 * EP)]);
+      const line = ep.map((c, i) => `${i ? 'L' : 'M'}${c[0].toFixed(1)},${c[1].toFixed(1)}`).join('');
+      elev = `<svg class="thumb-elev" viewBox="0 0 ${EW} ${EH}" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <path d="${line}L${EW},${EH}L0,${EH}Z" fill="rgba(232,101,10,.16)"/>
+        <path d="${line}" fill="none" stroke="#e8650a" stroke-width="1.4" vector-effect="non-scaling-stroke" stroke-linejoin="round"/>
+      </svg>`;
+    }
+  }
+  return `<a class="route-thumb" href="/r/${encodeURIComponent(routeId)}" tabindex="-1" aria-hidden="true">${trace}${elev}</a>`;
+}
+
 function routeCardHtml(row, profile){
   const plan = row.plan || {};
   const summary = plan.summary || {};
@@ -246,6 +323,7 @@ function routeCardHtml(row, profile){
   return `
     <div class="route-card">
       ${owner}
+      ${routeThumbHtml(row.id, plan.gpx)}
       <div class="route-card-name"><a href="/r/${encodeURIComponent(row.id)}">${escapeHtml(name)}</a></div>
       ${row.location ? `
       <div class="route-card-location">
