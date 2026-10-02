@@ -59,14 +59,9 @@ header{
 .nav-link svg{flex-shrink:0;}
 .nav-link.active{color:var(--orange);font-weight:700;}
 .header-nav{display:flex;align-items:center;gap:22px;}
-.ig-badge{
-  display:flex;align-items:center;gap:6px;
-  font-size:12px;font-weight:600;color:var(--muted);
-  padding:6px 12px;border:1px solid var(--border2);border-radius:20px;
-  transition:all .2s;
-}
-.ig-badge:hover{border-color:var(--orange);color:var(--orange);}
-.ig-badge svg{flex-shrink:0;}
+.mini-footer{text-align:center;padding:28px 24px 36px;}
+.mini-footer a{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:600;color:var(--muted2);}
+.mini-footer a:hover{color:var(--orange);}
 .upload-btn{
   display:flex;align-items:center;gap:7px;background:var(--orange);color:#fff;border:none;
   padding:9px 18px;border-radius:8px;font-size:13px;font-weight:700;white-space:nowrap;
@@ -94,7 +89,6 @@ header{
   .header-nav{gap:6px;}
   .nav-link{font-size:12px;}
   .nav-link .btn-label{display:none;}
-  .ig-badge{display:none;}
   .upload-btn .btn-label{display:none;}
   .upload-btn{padding:9px 10px;}
   .login-btn{padding:8px 10px;font-size:12px;white-space:nowrap;}
@@ -141,10 +135,6 @@ h1{font-size:26px;font-weight:800;color:var(--text);letter-spacing:-.4px;margin-
     <span class="logo-text">Desni<span>vel</span></span>
   </a>
   <nav class="header-nav">
-    <a class="ig-badge" href="https://instagram.com/hidelink" target="_blank" rel="noopener">
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><circle cx="12" cy="12" r="5"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg>
-      @hidelink
-    </a>
     <a class="nav-link active" href="/explorar">
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
       <span class="btn-label">Explorar</span>
@@ -176,6 +166,14 @@ h1{font-size:26px;font-weight:800;color:var(--text);letter-spacing:-.4px;margin-
   <div id="state-msg">Cargando rutas…</div>
   <div class="route-grid" id="route-grid"></div>
 </main>
+
+<footer class="mini-footer">
+  <a href="https://instagram.com/hidelink" target="_blank" rel="noopener">
+    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><circle cx="12" cy="12" r="5"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg>
+    @hidelink
+  </a>
+</footer>
+
 
 <script is:inline>
 const supabaseClient = supabase.createClient(window.__SUPABASE_URL__, window.__SUPABASE_ANON_KEY__);
