@@ -94,13 +94,18 @@ export function t(locale: Locale, key: DictKey): string {
 
 export function routePath(locale: Locale, slug?: string): string {
   const base = locale === defaultLocale ? '' : `/${locale}`;
-  if (!slug) return `${base}/rutas` || '/rutas';
-  return `${base}/rutas/${slug}`;
+  if (!slug) return `${base}/rutas/`;
+  return `${base}/rutas/${slug}/`;
 }
 
+// Pages are built as /x/index.html and the host 301s /x to /x/, so the
+// slash form is the real URL. Links, canonicals and hreflang all use it —
+// pointing them at the redirecting form made Google file every page under
+// "Page with redirect" and see a canonical that disagrees with the sitemap.
 export function localePath(locale: Locale, path: string): string {
   const base = locale === defaultLocale ? '' : `/${locale}`;
-  return `${base}${path}` || '/';
+  const full = `${base}${path}` || '/';
+  return full.endsWith('/') ? full : `${full}/`;
 }
 
 const difficultyLabels: Record<Locale, Record<string, string>> = {

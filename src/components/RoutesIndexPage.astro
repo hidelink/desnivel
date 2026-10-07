@@ -19,10 +19,10 @@ const sorted = [...entries].sort((a, b) => b.data.fecha.getTime() - a.data.fecha
   description={t(locale, 'routes_index_lead')}
   locale={locale}
   path={localePath(locale, '/rutas')}
-  alternatePath={locale === 'es' ? '/en/rutas' : '/rutas'}
+  alternatePath={locale === 'es' ? '/en/rutas/' : '/rutas/'}
   section="routes"
-  esPath="/rutas"
-  enPath="/en/rutas"
+  esPath="/rutas/"
+  enPath="/en/rutas/"
 >
   <section class="section">
     <div class="wrap">

@@ -13,7 +13,7 @@ const { locale, esPath, enPath } = Astro.props;
 <div class="lang-switch">
   <a href={esPath ?? '/'} aria-current={locale === 'es' ? 'page' : undefined}>ES</a>
   <span aria-hidden="true">/</span>
-  <a href={enPath ?? '/en'} aria-current={locale === 'en' ? 'page' : undefined}>EN</a>
+  <a href={enPath ?? '/en/'} aria-current={locale === 'en' ? 'page' : undefined}>EN</a>
 </div>
 
 <style>

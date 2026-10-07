@@ -831,12 +831,12 @@ footer{
   </a>
   <div class="header-right">
     <!-- "Mis rutas" (editorial /rutas archive) hidden until that section is ready.
-    <a class="ig-badge" href="/rutas">
+    <a class="ig-badge" href="/rutas/">
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M3 10l9-7 9 7"/><path d="M5 9v10h14V9"/></svg>
       Mis rutas
     </a>
     -->
-    <a class="ig-badge explorar-badge" href="/explorar">
+    <a class="ig-badge explorar-badge" href="/explorar/">
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
       <span class="btn-label">Explorar</span>
     </a>
@@ -1152,7 +1152,7 @@ footer{
     <!-- Social links -->
     <div class="footer-links">
       <!-- "Mis rutas publicadas" (editorial /rutas archive) hidden until that section is ready.
-      <a class="footer-link" href="/rutas">
+      <a class="footer-link" href="/rutas/">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M3 10l9-7 9 7"/><path d="M5 9v10h14V9"/></svg>
         Mis rutas publicadas
       </a>
@@ -1505,7 +1505,7 @@ function refreshEstimatedTimeStat(){
     if (isLoggedIn) {
       tipCta.innerHTML = paceProfile.flatSec
         ? 'El ritmo en plano es solo un punto de partida — no captura tu fuerza para subir caminando rápido ni tu técnica bajando terreno técnico, así que trátalo como referencia, no como predicción exacta.'
-        : 'Es solo un punto de partida, no una predicción exacta. <a href="/editar-perfil" style="color:inherit;text-decoration:underline">Configura tu ritmo real en tu perfil</a> para afinar esta estimación.';
+        : 'Es solo un punto de partida, no una predicción exacta. <a href="/editar-perfil/" style="color:inherit;text-decoration:underline">Configura tu ritmo real en tu perfil</a> para afinar esta estimación.';
     } else {
       tipCta.innerHTML = 'Es solo un punto de partida, no una predicción exacta. <a href="/" style="color:inherit;text-decoration:underline" onclick="openLoginModal();return false;">Regístrate</a> y configura tu ritmo real en tu perfil para afinarla.';
     }

@@ -58,8 +58,8 @@ const jsonLd = buildRouteJsonLd({
   ogImage={heroImage?.src}
   jsonLd={jsonLd}
   section="routes"
-  esPath={locale === 'es' ? routePath('es', d.slug) : hasAlternate ? routePath('es', d.slug) : '/rutas'}
-  enPath={locale === 'en' ? routePath('en', d.slug) : hasAlternate ? routePath('en', d.slug) : '/en/rutas'}
+  esPath={locale === 'es' ? routePath('es', d.slug) : hasAlternate ? routePath('es', d.slug) : '/rutas/'}
+  enPath={locale === 'en' ? routePath('en', d.slug) : hasAlternate ? routePath('en', d.slug) : '/en/rutas/'}
 >
   <RouteHero
     locale={locale}

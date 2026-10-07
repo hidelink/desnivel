@@ -5,12 +5,12 @@
 ## Herramienta
 
 - [Analizador de rutas](https://desnivel.run/): sube un archivo GPX y analiza distancia, desnivel, altimetría, mapa, checkpoints y una calculadora de ritmo de carrera.
-- [Explorar](https://desnivel.run/explorar): rutas públicas compartidas por la comunidad, las más recientes primero.
+- [Explorar](https://desnivel.run/explorar/): rutas públicas compartidas por la comunidad, las más recientes primero.
 
 ## Archivo editorial
 
-- [Rutas](https://desnivel.run/rutas): crónicas de rutas de trail running, hiking y travesías, cada una recorrida y documentada con datos reales de GPX.
-- [Acerca de](https://desnivel.run/acerca): qué es Desnivel y por qué existe.
+- [Rutas](https://desnivel.run/rutas/): crónicas de rutas de trail running, hiking y travesías, cada una recorrida y documentada con datos reales de GPX.
+- [Acerca de](https://desnivel.run/acerca/): qué es Desnivel y por qué existe.
 
 ## Notas
 
