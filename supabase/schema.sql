@@ -140,3 +140,52 @@ alter table profiles add constraint pace_uphill_rating_valid
   check (pace_uphill_rating is null or pace_uphill_rating in ('dificil','normal','bueno'));
 alter table profiles add constraint pace_downhill_rating_valid
   check (pace_downhill_rating is null or pace_downhill_rating in ('dificil','normal','bueno'));
+
+-- Customisable share link. routes.id stays the permanent, never-changing key
+-- (every link created so far uses it, and keeps working forever); slug is an
+-- optional friendlier alternative the owner can set ONCE, e.g. /r/dos-aguas-
+-- nahualac instead of /r/morning-trail-run-b8e7d0. Both resolve to the same
+-- route, so choosing a slug never breaks a link that was already shared.
+alter table routes add column if not exists slug text;
+alter table routes add column if not exists slug_edited boolean not null default false;
+
+create unique index if not exists routes_slug_key on routes (slug) where slug is not null;
+
+alter table routes add constraint routes_slug_format
+  check (slug is null or (slug ~ '^[a-z0-9]+(-[a-z0-9]+)*$' and char_length(slug) between 3 and 50));
+
+-- The owner can already update their own row (routes_owner_update), so the
+-- "only once" rule and the id/slug collision rule have to live here, not in
+-- the client: a slug may never equal another route's id (it would shadow it),
+-- a new id may never equal an existing slug, and slug_edited can't be reset.
+create or replace function routes_guard_slug()
+returns trigger
+language plpgsql
+as $$
+begin
+  if tg_op = 'UPDATE' then
+    if new.slug is distinct from old.slug then
+      if old.slug_edited then
+        raise exception 'slug_already_edited';
+      end if;
+      new.slug_edited := true;
+    else
+      new.slug_edited := old.slug_edited;
+    end if;
+  end if;
+
+  if new.slug is not null and exists (select 1 from routes where id = new.slug and id <> new.id) then
+    raise exception 'slug_taken';
+  end if;
+  if tg_op = 'INSERT' and exists (select 1 from routes where slug = new.id) then
+    raise exception 'slug_taken';
+  end if;
+
+  return new;
+end;
+$$;
+
+drop trigger if exists routes_guard_slug_trg on routes;
+create trigger routes_guard_slug_trg
+  before insert or update on routes
+  for each row execute function routes_guard_slug();

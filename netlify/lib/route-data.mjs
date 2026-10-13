@@ -9,17 +9,32 @@ export function isValidRouteId(id) {
   return /^[a-z0-9](?:[a-z0-9-]{0,58}[a-z0-9])?$/i.test(id || '');
 }
 
-// Same visibility rule as get-route: a hidden or missing route is simply
-// "not found" here too, so nothing about it leaks into a link preview.
-export async function loadPublicRoute(id) {
-  if (!isValidRouteId(id)) return null;
-  const { data, error } = await supabase
+// A link can carry either the permanent id or the owner's custom slug (see
+// routes.slug in schema.sql); both reach the same route. The id wins if one
+// string were ever both — the database refuses to let that happen anyway.
+// A hidden or missing route is simply "not found", so nothing about it
+// leaks into a link preview or an API response.
+export async function loadPublicRoute(key) {
+  if (!isValidRouteId(key)) return null;
+  // `key` passed the strict [a-z0-9-] check above, so it is safe inside the filter.
+  let { data, error } = await supabase
     .from('routes')
-    .select('plan, is_hidden, location')
-    .eq('id', id)
-    .maybeSingle();
-  if (error || !data || data.is_hidden) return null;
-  return { plan: data.plan || {}, location: data.location || null };
+    .select('id, slug, plan, is_hidden, location')
+    .or(`id.eq.${key},slug.eq.${key}`)
+    .limit(2);
+  if (error) {
+    // Slug column not there yet (code deployed before the SQL ran): behave
+    // exactly like before and resolve by id only.
+    ({ data, error } = await supabase
+      .from('routes')
+      .select('id, plan, is_hidden, location')
+      .eq('id', key)
+      .limit(1));
+  }
+  if (error || !data || !data.length) return null;
+  const row = data.find((r) => r.id === key) || data[0];
+  if (row.is_hidden) return null;
+  return { id: row.id, slug: row.slug || null, plan: row.plan || {}, location: row.location || null };
 }
 
 const toArray = (v) => (v === undefined || v === null ? [] : Array.isArray(v) ? v : [v]);

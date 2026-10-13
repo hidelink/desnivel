@@ -142,11 +142,11 @@ header{
 .toast-success{border-left-color:var(--flat);}
 
 /* ── LOGIN MODAL ────────────────────────────────────────── */
-#login-overlay, #onboarding-overlay, #route-rename-overlay{
+#login-overlay, #onboarding-overlay, #route-rename-overlay, #route-link-overlay{
   display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);
   z-index:2000;align-items:center;justify-content:center;padding:20px;
 }
-#login-overlay.show, #onboarding-overlay.show, #route-rename-overlay.show{display:flex;}
+#login-overlay.show, #onboarding-overlay.show, #route-rename-overlay.show, #route-link-overlay.show{display:flex;}
 .ob-swatch{width:22px;height:22px;border-radius:50%;cursor:pointer;border:2px solid transparent;}
 .ob-swatch.selected{border-color:var(--text);}
 .login-card{
@@ -228,6 +228,15 @@ header{
   padding:6px 10px;border-radius:6px;cursor:pointer;white-space:nowrap;transition:background .2s;
 }
 .share-copy-btn:hover{background:var(--orange2);}
+.share-edit-btn{
+  display:none;background:none;border:1px solid var(--border2);color:var(--muted);
+  width:26px;height:26px;border-radius:6px;cursor:pointer;flex-shrink:0;
+  align-items:center;justify-content:center;
+}
+.share-edit-btn:hover{border-color:var(--orange);color:var(--orange);}
+.link-prefix-row{display:flex;align-items:center;background:var(--bg);border:1px solid var(--border2);border-radius:8px;padding:0 11px;}
+.link-prefix-row span{font-size:12.5px;color:var(--muted2);font-weight:600;white-space:nowrap;}
+.link-prefix-row input{flex:1;min-width:0;background:transparent;border:none;padding:10px 4px;font-size:13px;color:var(--text);outline:none;}
 
 /* ── MAIN ───────────────────────────────────────────────── */
 #main{display:none;padding:0 28px 60px;}
@@ -814,6 +823,25 @@ footer{
   </div>
 </div>
 
+<!-- ROUTE LINK MODAL -->
+<div id="route-link-overlay" onclick="if(event.target===this) closeRouteLinkModal()">
+  <div class="login-card" style="width:420px;">
+    <div class="login-field">
+      <label for="route-link-input">Link de tu ruta</label>
+      <div class="link-prefix-row">
+        <span>desnivel.run/r/</span>
+        <input id="route-link-input" type="text" maxlength="50" autocomplete="off" autocapitalize="off" spellcheck="false">
+      </div>
+      <div id="route-link-status" style="font-size:11.5px;min-height:16px;margin-top:2px"></div>
+    </div>
+    <div class="login-sub" style="text-align:left">Solo puedes cambiarlo una vez. El link que ya tenías seguirá funcionando, así que nada de lo que hayas compartido se rompe.</div>
+    <div class="login-actions">
+      <button class="secondary" onclick="closeRouteLinkModal()">Cancelar</button>
+      <button class="primary" id="route-link-save" onclick="saveRouteLink()">Guardar link</button>
+    </div>
+  </div>
+</div>
+
 <!-- HEADER -->
 <header>
   <a class="logo" href="/">
@@ -903,6 +931,9 @@ footer{
       </div>
       <div id="share-result" class="share-result">
         <input type="text" id="share-url-input" readonly onclick="this.select()">
+        <button type="button" class="share-edit-btn" id="share-edit-btn" onclick="openRouteLinkModal()" title="Personalizar el link" aria-label="Personalizar el link">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
+        </button>
         <button type="button" class="share-copy-btn" onclick="copyShareUrl(this)">Copiar</button>
       </div>
     </div>
@@ -1362,6 +1393,17 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('ob-username')?.addEventListener('input', () => {
     clearTimeout(obUsernameCheckTimer);
     obUsernameCheckTimer = setTimeout(checkUsernameAvailability, 400);
+  });
+  const linkInput = document.getElementById('route-link-input');
+  linkInput?.addEventListener('input', () => {
+    linkInput.value = linkInput.value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
+      .replace(/[^a-z0-9-]+/g, '-').replace(/-{2,}/g, '-').replace(/^-/, '').slice(0, 50);
+    clearTimeout(routeLinkCheckTimer);
+    routeLinkCheckTimer = setTimeout(checkRouteLinkAvailability, 400);
+  });
+  linkInput?.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') { e.preventDefault(); saveRouteLink(); }
+    if (e.key === 'Escape') closeRouteLinkModal();
   });
   document.getElementById('route-rename-input')?.addEventListener('keydown', (e) => {
     if (e.key === 'Enter') saveRouteRename();
@@ -1847,6 +1889,110 @@ function showShareResult(url){
   const input = document.getElementById('share-url-input');
   input.value = url;
   document.getElementById('share-result').classList.add('show');
+  document.getElementById('share-edit-btn').style.display =
+    routeLinkInfo && routeLinkInfo.owner && !routeLinkInfo.edited ? 'flex' : 'none';
+}
+
+// ── CUSTOM LINK ────────────────────────────────────────────
+// A saved route is always reachable at /r/<id> (permanent). Its owner can
+// also pick a friendlier /r/<slug>, once; both keep working (see routes.slug
+// in schema.sql, which also enforces the once-only rule).
+let routeLinkInfo = null; // { slug, edited, owner } for the loaded saved route
+
+function shareUrl(){
+  return `${location.origin}/r/${(routeLinkInfo && routeLinkInfo.slug) || currentShareId}`;
+}
+
+async function refreshRouteLinkInfo(){
+  routeLinkInfo = null;
+  if (!supabaseClient || !currentShareId) return;
+  try {
+    const { data: { session } } = await supabaseClient.auth.getSession();
+    const { data, error } = await supabaseClient
+      .from('routes').select('slug, slug_edited, user_id').eq('id', currentShareId).maybeSingle();
+    if (error || !data) return;
+    routeLinkInfo = {
+      slug: data.slug || null,
+      edited: !!data.slug_edited,
+      owner: !!session && data.user_id === session.user.id,
+    };
+  } catch { routeLinkInfo = null; }
+}
+
+function slugifyLink(text){
+  return String(text || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 50).replace(/-+$/, '');
+}
+function validLinkSlug(v){ return /^[a-z0-9]+(-[a-z0-9]+)*$/.test(v) && v.length >= 3 && v.length <= 50; }
+
+let routeLinkCheckTimer = null;
+let routeLinkAvailable = false;
+
+function setRouteLinkStatus(text, color){
+  const el = document.getElementById('route-link-status');
+  el.textContent = text; el.style.color = color || 'var(--muted2)';
+}
+
+async function checkRouteLinkAvailability(){
+  const v = document.getElementById('route-link-input').value;
+  routeLinkAvailable = false;
+  if (!v) { setRouteLinkStatus(''); return; }
+  if (!validLinkSlug(v)) {
+    setRouteLinkStatus('Usa 3 a 50 letras minúsculas, números y guiones, sin guion al inicio ni al final.', 'var(--up2)');
+    return;
+  }
+  setRouteLinkStatus('Revisando…');
+  const { data, error } = await supabaseClient
+    .from('routes').select('id').or(`id.eq.${v},slug.eq.${v}`).limit(2);
+  if (document.getElementById('route-link-input').value !== v) return;
+  if (error) { setRouteLinkStatus('No se pudo revisar. Intenta de nuevo.', 'var(--up2)'); return; }
+  if ((data || []).some(r => r.id !== currentShareId)) {
+    setRouteLinkStatus('Ese link ya está en uso.', 'var(--up2)');
+  } else {
+    routeLinkAvailable = true;
+    setRouteLinkStatus('✓ Disponible', 'var(--flat)');
+  }
+}
+
+function openRouteLinkModal(){
+  if (!routeLinkInfo || !routeLinkInfo.owner || routeLinkInfo.edited) return;
+  const input = document.getElementById('route-link-input');
+  input.value = slugifyLink(document.getElementById('route-name-text').textContent);
+  document.getElementById('route-link-overlay').classList.add('show');
+  input.focus();
+  checkRouteLinkAvailability();
+}
+function closeRouteLinkModal(){
+  document.getElementById('route-link-overlay').classList.remove('show');
+}
+
+async function saveRouteLink(){
+  const v = document.getElementById('route-link-input').value;
+  if (!validLinkSlug(v)) { checkRouteLinkAvailability(); return; }
+  const btn = document.getElementById('route-link-save');
+  btn.disabled = true;
+  try {
+    // .select() because a blocked update (not the owner) matches zero rows
+    // without raising an error.
+    const { data, error } = await supabaseClient
+      .from('routes').update({ slug: v }).eq('id', currentShareId).select('slug');
+    if (error) {
+      const msg = error.message || '';
+      if (error.code === '23505' || msg.includes('slug_taken')) setRouteLinkStatus('Ese link ya está en uso.', 'var(--up2)');
+      else if (msg.includes('slug_already_edited')) { setRouteLinkStatus('Este link ya se personalizó una vez.', 'var(--up2)'); routeLinkInfo = { ...routeLinkInfo, edited: true }; }
+      else showToast('No se pudo guardar el link: ' + msg);
+      return;
+    }
+    if (!data || !data.length) { showToast('Solo el dueño de esta ruta puede cambiar su link.'); return; }
+    routeLinkInfo = { slug: v, edited: true, owner: true };
+    closeRouteLinkModal();
+    const url = shareUrl();
+    showShareResult(url);
+    const copied = await copyToClipboard(url);
+    showToast(copied ? 'Link actualizado y copiado. El anterior sigue funcionando.' : 'Link actualizado. El anterior sigue funcionando.', 'success');
+  } finally {
+    btn.disabled = false;
+  }
 }
 function copyShareUrl(btn){
   const input = document.getElementById('share-url-input');
@@ -1933,7 +2079,8 @@ async function shareCurrentRoute(){
   // shared earlier this session. Hand back that same link instead of
   // creating a duplicate.
   if (currentShareId) {
-    const url = `${location.origin}/r/${currentShareId}`;
+    await refreshRouteLinkInfo();
+    const url = shareUrl();
     const copied = await copyToClipboard(url);
     showShareResult(url);
     btn.textContent = copied ? '✓ Link copiado' : '✓ Link listo';
@@ -1944,7 +2091,8 @@ async function shareCurrentRoute(){
   btn.textContent = 'Subiendo…'; btn.disabled = true;
   try {
     currentShareId = await saveRouteAndGetId();
-    const url = `${location.origin}/r/${currentShareId}`;
+    await refreshRouteLinkInfo();
+    const url = shareUrl();
     const copied = await copyToClipboard(url);
     showShareResult(url);
     btn.textContent = copied ? '✓ Link copiado' : '✓ Link listo';
@@ -1986,7 +2134,8 @@ function shareIdFromUrl(){
     const data = await res.json().catch(()=>({}));
     if (!res.ok) throw new Error(data.error || 'No se encontró esa ruta compartida.');
     applyRoutePlan(data);
-    currentShareId = id;
+    // The link may carry the custom slug; saves and renames are keyed by id.
+    currentShareId = res.headers.get('x-route-id') || id;
   } catch (err) {
     showToast(err.message);
   } finally {

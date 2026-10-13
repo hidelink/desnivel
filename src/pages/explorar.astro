@@ -323,8 +323,8 @@ function routeCardHtml(row, profile){
   return `
     <div class="route-card">
       ${owner}
-      ${routeThumbHtml(row.id, plan.gpx)}
-      <div class="route-card-name"><a href="/r/${encodeURIComponent(row.id)}">${escapeHtml(name)}</a></div>
+      ${routeThumbHtml(row.slug || row.id, plan.gpx)}
+      <div class="route-card-name"><a href="/r/${encodeURIComponent(row.slug || row.id)}">${escapeHtml(name)}</a></div>
       ${row.location ? `
       <div class="route-card-location">
         <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
@@ -335,7 +335,7 @@ function routeCardHtml(row, profile){
         <span>↑ <b>${escapeHtml(summary.gain || '—')}</b></span>
       </div>
       ${diff ? `<span class="diff-pill" style="background:${colors.bg};color:${colors.fg}">${escapeHtml(diff)}</span>` : ''}
-      <a class="route-card-link" href="/r/${encodeURIComponent(row.id)}">Ver ruta →</a>
+      <a class="route-card-link" href="/r/${encodeURIComponent(row.slug || row.id)}">Ver ruta →</a>
     </div>
   `;
 }
@@ -350,7 +350,7 @@ async function loadFeed(){
   // to anyway.
   const { data: routes, error } = await supabaseClient
     .from('routes')
-    .select('id, user_id, plan, location, created_at')
+    .select('id, slug, user_id, plan, location, created_at')
     .eq('is_hidden', false)
     .not('user_id', 'is', null)
     .order('created_at', { ascending: false })

@@ -28,10 +28,12 @@ export default async (req) => {
   let body = html;
   let cacheable = false;
   try {
-    const id = decodeURIComponent(url.pathname.split('/').filter(Boolean)[1] || '');
-    const route = await loadPublicRoute(id);
+    const key = decodeURIComponent(url.pathname.split('/').filter(Boolean)[1] || '');
+    const route = await loadPublicRoute(key);
     if (route) {
-      body = withRouteMeta(html, { id, origin, plan: route.plan, location: route.location });
+      // The custom slug, when there is one, is the link worth indexing and
+      // sharing; the permanent id keeps working but isn't the canonical.
+      body = withRouteMeta(html, { id: route.slug || route.id, origin, plan: route.plan, location: route.location });
       cacheable = true;
     }
   } catch (err) {
