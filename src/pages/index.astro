@@ -927,7 +927,7 @@ footer{
       </div>
       <div class="route-actions">
         <button type="button" class="route-action-btn" id="download-gpx-btn" onclick="downloadGpx()">⬇ Descargar GPX</button>
-        <button type="button" class="route-action-btn" id="share-gpx-btn" style="display:none" onclick="sendGpxToApp()">📲 Enviar a mi app</button>
+        <button type="button" class="route-action-btn" id="share-gpx-btn" style="display:none" onclick="sendGpxToApp()" title="Enviar el archivo por AirDrop, Mensajes, Mail o guardarlo en Archivos">📲 Enviar archivo</button>
         <button type="button" class="route-action-btn" id="share-route-btn" onclick="shareCurrentRoute()">🔗 Compartir</button>
       </div>
       <div id="share-result" class="share-result">
@@ -1793,19 +1793,24 @@ function buildGpxWithCheckpoints(){
   return currentGpxText.replace(/(<gpx\b[^>]*>)/i, `$1${wpts}`);
 }
 
+function isIOS(){
+  return /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+}
+
 function gpxFileName(){
   const name = (currentFilename || document.getElementById('route-name-text').textContent || 'ruta').trim().replace(/\.gpx$/i,'');
   return name.replace(/[^\w\-]+/g,'_').replace(/^_+|_+$/g,'') + '.gpx';
 }
 
-// "Enviar a mi app": hands the same GPX the download button produces to the
-// phone's own share sheet, where the installed apps that read GPX (Wikiloc,
-// Komoot, Garmin Connect, Suunto, COROS, Strava, Files, AirDrop…) show up as
-// destinations — one integration instead of one per app. Which MIME types a
-// browser will agree to share varies (Chrome limits files to a short
-// allowlist that doesn't document GPX; Safari is more permissive), so the
-// first of these it accepts is used, and the button only appears at all if
-// one of them works; otherwise people just keep the download button.
+// "Enviar archivo": hands the same GPX the download button produces to the
+// phone's own share sheet (AirDrop, Messages, Mail, WhatsApp, Save to Files…).
+// It does NOT reach apps that merely open GPX files as documents (Wikiloc,
+// COROS…): on iPhone those only show up when sharing from Files — see the
+// hint downloadGpx() shows. Which MIME types a browser will agree to share
+// varies (Chrome limits files to a short allowlist that doesn't document
+// GPX; Safari is more permissive), so the first of these it accepts is used,
+// and the button only appears at all if one of them works; otherwise people
+// just keep the download button.
 const GPX_SHARE_TYPES = ['application/gpx+xml', 'application/octet-stream', 'application/xml', 'text/xml', 'text/plain'];
 let gpxShareType = null;
 function detectGpxShare(){
@@ -1850,6 +1855,10 @@ function downloadGpx(){
   URL.revokeObjectURL(url);
   btn.textContent = '✓ Descargado';
   setTimeout(()=>{ btn.textContent = orig; }, 1500);
+  // On iPhone the file lands in Files, and apps that open GPX (Wikiloc,
+  // COROS, Garmin…) are only offered from there, not from the browser's
+  // own share menu — so say where to go next.
+  if (isIOS()) showToast('Listo. Ábrelo desde Archivos → Compartir → tu app (Wikiloc, COROS, Garmin…).', 'success');
 }
 
 // Builds the plan object posted to the share backend — always without the
