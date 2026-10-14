@@ -1821,9 +1821,12 @@ document.addEventListener('DOMContentLoaded', detectGpxShare);
 
 async function sendGpxToApp(){
   if (!gpxPoints.length || !currentGpxText) { showToast('Carga una ruta primero.'); return; }
-  const name = (document.getElementById('route-name-text').textContent || 'Ruta').trim();
+  // File only, deliberately no title/text/url: iOS turns each of those into an
+  // extra share item, and the apps that open GPX as a document (Wikiloc,
+  // COROS…) are only offered when the file is the one thing being shared —
+  // which is why they showed up sharing from Files but not from here.
   // Built synchronously: share() must run inside the tap's user activation.
-  const data = { files: [new File([buildGpxWithCheckpoints()], gpxFileName(), { type: gpxShareType })], title: name };
+  const data = { files: [new File([buildGpxWithCheckpoints()], gpxFileName(), { type: gpxShareType })] };
   try {
     if (!navigator.canShare(data)) throw new Error('unsupported');
     await navigator.share(data);
